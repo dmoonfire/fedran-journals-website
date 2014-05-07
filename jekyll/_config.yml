@@ -1,0 +1,21 @@
+name: "Site Name"
+baseUrl: http://url-of-site.com
+markdown: redcarpet
+pygments: false
+
+# Look and feel of elements not controlled by CSS.
+brand: "Fancy Title"
+windowsTile: "red"
+
+# Atom Feed
+atomCopyright: "2013-2014, Bob; Some Rights Reserved."
+
+# Comments
+#disqus: "name-of-discus-site"
+#disqusUrl: "http://url-of-discus-site.com/"
+
+# Table of Contents and collections. If this isn't missed, the TOC by default will put "by" and the name of the author.
+author: "Bob"
+
+# Blog posts
+permalink: /blog/:year/:month/:day-:title

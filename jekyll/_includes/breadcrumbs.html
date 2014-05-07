@@ -1,0 +1,11 @@
+{% if page.breadcrumbs %}
+<ul class="breadcrumb">
+  {% for crumb in page.breadcrumbs %}
+  {% if crumb.active %}
+  <li class="active">{{ crumb.title }}</li>
+  {% else %}
+  <li><a href="{{ crumb.relativePath }}">{{ crumb.title }}</a></li>
+  {% endif %}
+  {% endfor %}
+</ul>
+{% endif %}

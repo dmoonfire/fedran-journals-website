@@ -1,0 +1,15 @@
+{% if page.relative.next or page.relative.previous %}
+<ul class="pager">
+  {% if page.relative.previous %}
+  <li class="previous"><a href="../{{ page.relative.previous.filename }}/">&larr; Chapter {{ page.relative.previous.chapter }}</a></li>
+  {% else %}
+  <li class="previous disabled"><a href="#">First Chapter</a></li>
+  {% endif %}
+
+  {% if page.relative.next %}
+  <li class="next"><a href="../{{ page.relative.next.filename }}/">Chapter {{ page.relative.next.chapter }} &rarr;</a></li>
+  {% else %}
+  <li class="next disabled"><a href="#">Final Chapter</a></li>
+  {% endif %}
+</ul>
+{% endif %}

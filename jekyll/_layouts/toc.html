@@ -1,0 +1,40 @@
+---
+layout: page
+---
+
+{{ content }}
+
+<h2>{{ page.organization }}</h2>
+
+{% for include in page.includes %}
+<div class="chapter">
+  <div class="chapter-title">
+    <h3>
+	  <!-- Include the chapter prefix, if we are showing chapters. -->
+      {% if page.organization == "Chapters": %}
+         <span class="chapter-number">
+		   Chapter {{ forloop.index }}:
+		 </span>
+      {% endif %}
+
+	  <!-- Include the URL and title -->
+	  {% if include.url %}
+      <a href="{{ include.url }}/">
+	  {% endif %}
+        {{ include.title }}
+	  {% if include.url %}
+      </a>
+	  {% endif %}
+
+	  <!-- Check to see if we have a different author. -->
+	  {% if include.author and include.author != site.author %}
+	    <span class='different-author'>by {{ include.author }}</span>
+	  {% endif %}
+    </h3>
+  </div>
+
+  {% if include.summary %}
+  <p class="chapter-summary">{{ include.summary }}</p>
+  {% endif %}
+</div>
+{% endfor %}

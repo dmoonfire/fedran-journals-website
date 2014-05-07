@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta -->
+    <meta charset="utf-8" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+       More info: h5bp.com/i/378 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <!-- Our site title and description -->
+    <title>{{ page.title }}</title>
+    <meta name="description" content="{{ page.description }}" />
+    <meta name="keywords" content="{{ page.keywords }}" />
+
+    <!-- Mobile viewport optimized: h5bp.com/viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Icons -->
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/img/icon-144.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/img/icon-114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/img/icon-72.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/icon-57.png">
+    <meta name="msapplication-TileImage" content="/img/icon-144.png"/>
+	<meta name="msapplication-TileColor" content="#ffffff"/>
+
+    <!-- Shims: IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../../assets/js/html5shiv.js"></script>
+      <script src="../../assets/js/respond.min.js"></script>
+
+        <script async src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Styles -->
+	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
+
+	<!-- Feeds -->
+	<link rel="alternate" type="application/atom+xml" title="News" href="/atom.xml">
+  </head>
+  <body>
+	<div id="wrapper">
+	  <div id="inner-wrapper">
+		{% include navigation.html %}
+
+        <!-- Contents -->
+        <div id="wrapped-container" class="container">
+  		  {{ content }}
+		  {% include comments.html %}
+		
+		  <!-- The copyright goes at the bottom of the page -->
+		  <div class="row footer">
+			<div class="col-md-7">
+			  <div>
+				<a href="/atom.xml">Blog Atom/RSS</a>
+			  </div>
+			</div>
+			<div class="col-md-2">
+			</div>
+			<div class="col-md-3">
+			  <div id="copyright">
+				<div>Copyright &copy; 1991-2014, Bob</div>
+				<div>Some Rights Reserved</div>
+			  </div>
+
+			  <div id="license">
+<!-- NOTE: One should always have an explicit license on their pages. -->
+			  </div>
+			</div>
+		  </div>
+        </div>
+	  </div>
+    </div>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+</body>
+</html>
