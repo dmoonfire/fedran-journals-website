@@ -1,0 +1,6 @@
+[submodule "lib/bootstrap"]
+	path = lib/bootstrap
+	url = https://github.com/twbs/bootstrap.git
+[submodule "lib/mfgames-jekyll"]
+	path = lib/mfgames-jekyll
+	url = https://github.com/dmoonfire/mfgames-jekyll.git
