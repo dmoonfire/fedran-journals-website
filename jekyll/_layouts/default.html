@@ -42,39 +42,9 @@
 	<link rel="alternate" type="application/atom+xml" title="News" href="/atom.xml">
   </head>
   <body>
-	<div id="wrapper">
-	  <div id="inner-wrapper">
-		{% include navigation.html %}
+	{{ content }}
 
-        <!-- Contents -->
-        <div id="wrapped-container" class="container">
-  		  {{ content }}
-		  {% include comments.html %}
-		
-		  <!-- The copyright goes at the bottom of the page -->
-		  <div class="row footer">
-			<div class="col-md-7">
-			  <div>
-				<a href="/atom.xml">Blog Atom/RSS</a>
-			  </div>
-			</div>
-			<div class="col-md-2">
-			</div>
-			<div class="col-md-3">
-			  <div id="copyright">
-				<div>Copyright &copy; 1991-2014, Bob</div>
-				<div>Some Rights Reserved</div>
-			  </div>
-
-			  <div id="license">
-<!-- NOTE: One should always have an explicit license on their pages. -->
-			  </div>
-			</div>
-		  </div>
-        </div>
-	  </div>
-    </div>
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script type="text/javascript" src="/js/bootstrap.min.js"></script>
-</body>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+  </body>
 </html>
