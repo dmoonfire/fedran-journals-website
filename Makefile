@@ -4,7 +4,7 @@
 
 # If a file doesn't have a layout, Jekyll chokes. This allows us to
 # give a default layout for those pages that don't explictly add it.
-DEFAULT_LAYOUT = default
+DEFAULT_LAYOUT = page
 
 #
 # Local Additions
@@ -101,6 +101,7 @@ copy: prepare local-pre-copy
 
 generate: copy bootstrap
 	jekyll build/jekyll/ dist/
+	$(MAKE) local-post-generate
 
 #
 # Hooks
@@ -118,6 +119,12 @@ local-copy-files:
 # place. It can be used to pull files from other locations. For
 # example, pull in the site icons or additional pages from a Git
 # repository.
+	cp lib/stories/dmoonfire/fedran/sand-and-blood/chapters/chapter-0[1-7].markdown build/jekyll/
+
+	for i in build/jekyll/chapter*.markdown;do \
+		cat $$i | perl -ne 's@^(>.*) (---.*)@$$1\n\n> ATTR:$$2@g;print;' > a; \
+		mv a $$i; \
+	done
 
 local-process-files:
 # The local-process-files hook is useful for going through and adding
@@ -131,6 +138,17 @@ local-process-files:
 #		| xargs lib/mfgames-jekyll/insert-yaml --if-missing=showFlattr:true
 #	find build/jekyll/_posts/ -name "*.html" -o -name "*.markdown" \
 #		| xargs lib/mfgames-jekyll/insert-yaml --if-missing=showFlattr:true
+
+local-post-generate:
+# The local-post-generate hook is useful for going through the full
+# generated file in the dist/ directory and performing additional
+# processing.
+	for i in $$(find dist/ -name "*.html");do \
+		cat $$i \
+			| perl -ne 's@<p>ATTR:@<p class="attribution">@sg;print;' \
+			> .tmp; \
+		mv .tmp $$i; \
+	done
 
 #
 # Install Requirements

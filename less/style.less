@@ -1,5 +1,10 @@
 @import "variables.less";
 
+body
+{
+	background-color: @white-chocolate;
+}
+
 h1
 {
 	text-align: center;
@@ -24,15 +29,25 @@ a:hover
 	padding-top: 50px;
 }
 
-div#cover, div#sale
+div#cover, div#sample, div#chapter-title
 {
 	padding: 50px;
 	background-color: @milk-chocolate;
 	color: @white-chocolate;
 	text-align: center;
+
+	a
+	{
+		color: @white-chocolate;
+	}
+		
+	a:hover
+	{
+		color: white;
+	}
 }
 
-div#blurb, div#reviews
+div#blurb, div#reviews, div#sale, div.contents
 {
 	padding: 50px;
 	background-color: @white-chocolate;
@@ -55,4 +70,54 @@ div#legal
 	background-color: @dark-chocolate;
 	color: @milk-chocolate;
 	text-align: center;
+}
+
+div#sample
+{
+	text-align: left;
+}
+
+div#sample ul
+{
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+/*
+ * Chapters
+ */
+
+ul.breadcrumb
+{
+	background: transparent;
+	text-align: left;
+}
+
+div.contents
+{
+	p
+	{
+		text-indent: 2em;
+		margin: 0;
+		padding: 0;
+	}
+
+	blockquote
+	{
+		font-size: small;
+		border: none;
+		margin: 0 2em;
+		
+		p
+		{
+			text-indent: 0;
+			margin: 0.5em 0;
+		}
+
+		p.attribution
+		{
+			text-align: right;
+		}
+	}
 }
