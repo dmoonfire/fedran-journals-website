@@ -5,7 +5,7 @@ body
 	background-color: @white-chocolate;
 }
 
-h1
+h1, h3
 {
 	text-align: center;
 	padding-top: 0;
@@ -29,12 +29,16 @@ a:hover
 	padding-top: 50px;
 }
 
-div#cover, div#sample, div#chapter-title
+div#cover h1
+{
+	font-size: 300%;
+}
+
+div#strip, div#world, div#chapter-title, div#sale, div#cover
 {
 	padding: 50px;
 	background-color: @milk-chocolate;
 	color: @white-chocolate;
-	text-align: center;
 
 	a
 	{
@@ -47,7 +51,7 @@ div#cover, div#sample, div#chapter-title
 	}
 }
 
-div#blurb, div#reviews, div#sale, div.contents
+div#author, div#blurb, div#reviews, div.contents, div#sample
 {
 	padding: 50px;
 	background-color: @white-chocolate;
@@ -120,4 +124,9 @@ div.contents
 			text-align: right;
 		}
 	}
+}
+
+.center
+{
+	text-align: center;
 }
