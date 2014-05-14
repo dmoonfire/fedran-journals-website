@@ -130,3 +130,26 @@ div.contents
 {
 	text-align: center;
 }
+
+/*
+ * Pager
+ */
+
+ul.pager a
+{
+	background: @milk-chocolate;
+	color: @white-chocolate;
+	border: 1px solid @dark-chocolate;
+	border-radius: 0;
+}
+
+ul.pager a:hover
+{
+	background: @white-chocolate;
+	color: @milk-chocolate;
+}
+
+ul.pager li.disabled a
+{
+	display: none;
+}

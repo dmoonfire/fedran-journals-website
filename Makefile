@@ -115,16 +115,34 @@ local-pre-copy:
 # "copy" target is called.
 
 local-copy-files:
-# This hook is used to copy files from the setup into the proper
-# place. It can be used to pull files from other locations. For
-# example, pull in the site icons or additional pages from a Git
-# repository.
+	# Copy the sample chapters from the repo into the pages directory.
 	cp lib/stories/dmoonfire/fedran/sand-and-blood/chapters/chapter-0[1-7].markdown build/jekyll/
 
+	# Because of how epigraphs are written in the source document, we
+	# need to split them out for the Markdown processor to handle. We
+	# also add ATTR so we can style the paragraph later.
 	for i in build/jekyll/chapter*.markdown;do \
-		cat $$i | perl -ne 's@^(>.*) (---.*)@$$1\n\n> ATTR:$$2@g;print;' > a; \
+		a=$$(echo $$i | cut -f 2 -d - | cut -f 1 -d . | sed 's@0@@'); \
+		cat $$i \
+			| perl -ne "s@Title: @Title: Chapter $$a: @;print;" \
+			| perl -ne 's@^(>.*) (---.*)@$$1\n\n> ATTR:$$2@g;print;' \
+			> a; \
 		mv a $$i; \
 	done
+
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-02.markdown next build/jekyll/chapter-01.markdown --chapter=2 --relative=../chapter-02
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-03.markdown next build/jekyll/chapter-02.markdown --chapter=3 --relative=../chapter-03
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-04.markdown next build/jekyll/chapter-03.markdown --chapter=4 --relative=../chapter-04
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-05.markdown next build/jekyll/chapter-04.markdown --chapter=5 --relative=../chapter-05
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-06.markdown next build/jekyll/chapter-05.markdown --chapter=6 --relative=../chapter-06
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-07.markdown next build/jekyll/chapter-06.markdown --chapter=7 --relative=../chapter-07
+
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-01.markdown previous build/jekyll/chapter-02.markdown --chapter=1 --relative=../chapter-01
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-02.markdown previous build/jekyll/chapter-03.markdown --chapter=2 --relative=../chapter-02
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-03.markdown previous build/jekyll/chapter-04.markdown --chapter=3 --relative=../chapter-03
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-04.markdown previous build/jekyll/chapter-05.markdown --chapter=4 --relative=../chapter-04
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-05.markdown previous build/jekyll/chapter-06.markdown --chapter=5 --relative=../chapter-05
+	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-06.markdown previous build/jekyll/chapter-07.markdown --chapter=6 --relative=../chapter-06
 
 local-process-files:
 # The local-process-files hook is useful for going through and adding
