@@ -2,7 +2,7 @@
 # Variables
 #
 
-COVER_IMG = lib/stories/dmoonfire/fedran/sand-and-blood/cover/front-30.jpg
+COVER_IMG = lib/sand-and-blood/cover/front-30.jpg
 
 # If a file doesn't have a layout, Jekyll chokes. This allows us to
 # give a default layout for those pages that don't explictly add it.
@@ -118,7 +118,7 @@ local-pre-copy:
 
 local-copy-files:
 	# Copy the sample chapters from the repo into the pages directory.
-	cp lib/stories/dmoonfire/fedran/sand-and-blood/chapters/chapter-0[1-7].markdown build/jekyll/
+	cp lib/sand-and-blood/chapters/chapter-0[1-7].markdown build/jekyll/
 
 	# Because of how epigraphs are written in the source document, we
 	# need to split them out for the Markdown processor to handle. We
