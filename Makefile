@@ -2,6 +2,8 @@
 # Variables
 #
 
+COVER_IMG = lib/stories/dmoonfire/fedran/sand-and-blood/cover/front-30.jpg
+
 # If a file doesn't have a layout, Jekyll chokes. This allows us to
 # give a default layout for those pages that don't explictly add it.
 DEFAULT_LAYOUT = page
@@ -143,6 +145,11 @@ local-copy-files:
 	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-04.markdown previous build/jekyll/chapter-05.markdown --chapter=4 --relative=../chapter-04
 	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-05.markdown previous build/jekyll/chapter-06.markdown --chapter=5 --relative=../chapter-05
 	lib/mfgames-jekyll/insert-yaml-relative build/jekyll/chapter-06.markdown previous build/jekyll/chapter-07.markdown --chapter=6 --relative=../chapter-06
+
+	convert $(COVER_IMG) -scale 50% build/jekyll/img/cover.jpg
+	convert $(COVER_IMG) -scale x160 build/jekyll/img/cover-160.jpg
+
+	cp $(COVER_IMG) build/jekyll/img/cover-2554.jpg
 
 local-process-files:
 # The local-process-files hook is useful for going through and adding
