@@ -47,7 +47,26 @@ div#strip, div#world, div#chapter-title, div#sale, div#cover
 		
 	a:hover
 	{
-		color: white;
+			color: white;
+	}
+	
+	.btn-success, .btn-success:active, .btn-success:focus, .open > .dropdown-toggle.btn-success
+	{		
+		background-color: @dark-chocolate;
+		border-color: @white-chocolate;
+	}
+	
+	.dropdown-menu
+	{
+		color: @dark-chocolate;
+		background-color: @white-chocolate;
+	}
+	
+	.btn-success:hover
+	{
+		color: @dark-chocolate;
+		background-color: @white-chocolate;
+		border-color: @dark-chocolate;
 	}
 }
 
@@ -65,6 +84,30 @@ div#author, div#blurb, div#reviews, div.contents, div#sample
 	a:hover
 	{
 		color: @milk-chocolate;
+	}
+	
+	.btn-success, .btn-success:active, .btn-success:focus, .open > .dropdown-toggle.btn-success
+	{		
+		background-color: @milk-chocolate;
+		border-color: @dark-chocolate;
+	}
+
+	a.btn
+	{
+		color: @white-chocolate;
+	}
+	
+	.dropdown-menu
+	{
+		color: @white-chocolate;
+		background-color: @dark-chocolate;
+	}
+	
+	.btn-success:hover
+	{
+		color: @white-chocolate;
+		background-color: @dark-chocolate;
+		border-color: @white-chocolate;
 	}
 }
 
@@ -166,30 +209,18 @@ ul.pager li.disabled a
 .btn
 {
 	border-radius: 0;
+	margin-bottom: 1em;
 }
 
-.btn-success a, div#sale a
+.btn-success a, a.btn
 {
 	text-decoration: none;
 }
 
-.btn-success, .btn-success:active, .btn-success:focus, .open > .dropdown-toggle.btn-success
+div#sample a.btn
 {
-	background-color: @dark-chocolate;
-	border-color: @white-chocolate;
-}
-
-.dropdown-menu
-{
-	color: @dark-chocolate;
-	background-color: @white-chocolate;
-}
-
-.btn-success:hover
-{
-	color: @dark-chocolate;
-	background-color: @white-chocolate;
-	border-color: @dark-chocolate;
+	text-align: left;
+	padding-left: 1em;
 }
 
 div#sale ul.dropdown-menu li a
