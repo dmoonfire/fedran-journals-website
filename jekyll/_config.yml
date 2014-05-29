@@ -11,8 +11,9 @@ windowsTile: "red"
 atomCopyright: "2013-2014, Bob; Some Rights Reserved."
 
 # Comments
-#disqus: "name-of-discus-site"
-#disqusUrl: "http://url-of-discus-site.com/"
+disqus:
+  name: "short-name-of-discus-site"
+  baseurl: "http://url-of-discus-site.com/"
 
 # Table of Contents and collections. If this isn't missed, the TOC by default will put "by" and the name of the author.
 author: "Bob"
