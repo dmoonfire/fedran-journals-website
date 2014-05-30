@@ -12,8 +12,14 @@ atomCopyright: "2013-2014, Bob; Some Rights Reserved."
 
 # Comments
 disqus:
+  enabled: true
   name: "short-name-of-discus-site"
   baseurl: "http://url-of-discus-site.com/"
+
+piwik:
+  enabled: true
+  id: 1
+  server: name.server.com
 
 # Table of Contents and collections. If this isn't missed, the TOC by default will put "by" and the name of the author.
 author: "Bob"
