@@ -9,6 +9,17 @@ windowsTile: "red"
 # Atom Feed
 atomCopyright: "2014, D. Moonfire; Some Rights Reserved."
 
+# Comments
+disqus:
+  enabled: false
+  name: "short-name-of-discus-site"
+  baseurl: "http://url-of-discus-site.com/"
+
+piwik:
+  enabled: true
+  id: 14
+  server: stats.moonfire.us
+
 # Table of Contents and collections. If this isn't missed, the TOC by default will put "by" and the name of the author.
 author: "D. Moonfire"
 

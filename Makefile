@@ -102,7 +102,7 @@ copy: prepare local-pre-copy
 	$(MAKE) local-process-files
 
 generate: copy bootstrap
-	jekyll build/jekyll/ dist/
+	jekyll -s build/jekyll/ -d dist/
 	$(MAKE) local-post-generate
 
 #

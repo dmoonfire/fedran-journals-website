@@ -1,15 +1,13 @@
-{% if site.disqus: %}
-<div class="row">
-<div class="offset1 span8">
+{% if site.disqus.enabled: %}
 <div id="disqus_thread"></div>
 <script type="text/javascript">
   /* * * CONFIGURATION VARIABLES * * */
-  var disqus_shortname = '{{ site.disqus }}';
+  var disqus_shortname = '{{ site.disqus.name }}';
   var disqus_identifier = '{{ page.disqus or page.url }}';
   var disqus_title = "{{ page.title }}";
   var disqus_container_id = 'disqus_thread';
   var disqus_domain = 'disqus.com';
-  var disqus_url = '{{ site.disqusUrl }}{{ page.url }}';
+  var disqus_url = '{{ site.disqus.baseurl}}{{ page.url }}';
 
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function() {
@@ -20,6 +18,4 @@
 </script>
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">Comments powered by <span class="logo-disqus">Disqus</span>.</a>
-</div>
-</div>
 {% endif %}
