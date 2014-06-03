@@ -101,6 +101,7 @@ copy: prepare local-pre-copy
 
 generate: copy bootstrap
 	jekyll -s build/jekyll/ -d dist/
+	$(MAKE) local-post-generate
 
 #
 # Hooks
@@ -131,6 +132,11 @@ local-process-files:
 #		| xargs lib/mfgames-jekyll/insert-yaml --if-missing=showFlattr:true
 #	find build/jekyll/_posts/ -name "*.html" -o -name "*.markdown" \
 #		| xargs lib/mfgames-jekyll/insert-yaml --if-missing=showFlattr:true
+
+local-post-generate:
+# The local-post-generate hook is useful for going through the full
+# generated file in the dist/ directory and performing additional
+# processing.
 
 #
 # Install Requirements
