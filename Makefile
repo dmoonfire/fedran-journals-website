@@ -23,7 +23,10 @@ DEFAULT_LAYOUT = default
 all: generate
 
 clean:
-	rm -rf build dist
+	rm -rf build dist/*
+
+reallyclean: clean
+	rm -rf dist
 
 prepare:
 	if [ ! -d build/jekyll ];then mkdir -p build/jekyll;fi
