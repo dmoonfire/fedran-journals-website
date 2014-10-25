@@ -47,7 +47,7 @@ bootstrap: prepare
 	lessc -x build/bootstrap/style.less > build/jekyll/css/style.css
 	lessc -x build/bootstrap/bootstrap.less > build/jekyll/css/bootstrap.css
 
-copy: prepare local-pre-copy
+copy: bootstrap local-pre-copy
 # Copy in the base Jekyll installation. This will include the
 # configuration, layouts, includes, and related files that are
 # specific to Jekyll itself.
