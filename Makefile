@@ -35,7 +35,7 @@ prepare:
 bootstrap: prepare
 	if [ ! -d lib/bootstrap ]; then \
 		echo "ERROR: lib/bootstrap is not populated"; \
-		echo "ERROR: cd lib && git checkout https://github.com/twbs/bootstrap.git"; \
+		echo "ERROR: cd lib && git clone https://github.com/twbs/bootstrap.git"; \
 		echo "ERROR: Stopping processing"; \
 		false; \
 		exit; \
