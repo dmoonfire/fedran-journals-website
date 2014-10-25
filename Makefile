@@ -33,6 +33,14 @@ prepare:
 	if [ ! -d dist ];then mkdir dist;fi
 
 bootstrap: prepare
+	if [ ! -d lib/bootstrap ]; then \
+		echo "ERROR: lib/bootstrap is not populated"; \
+		echo "ERROR: cd lib && git checkout https://github.com/twbs/bootstrap.git"; \
+		echo "ERROR: Stopping processing"; \
+		false; \
+		exit; \
+	fi
+
 	if [ ! -d build/jekyll/css ];then mkdir -p build/jekyll/css;fi
 	rsync -a lib/bootstrap/less/ build/bootstrap/
 	rsync -a less/ build/bootstrap
