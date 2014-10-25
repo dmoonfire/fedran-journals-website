@@ -1,0 +1,163 @@
+#!/usr/bin/perl
+
+# Creates relative links for chapters. This uses the parent file to
+# create a set of YAML tags for the next and previous.
+
+# USAGE: create-chapter-links [--verbose] directory [directory...]
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use Cwd qw(abs_path);
+use Data::Dumper;
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+
+GetOptions("verbose" => \$verbose);
+
+# Go through the directories left on the argument list.
+my %indexes = ();
+my $root_dir = undef;
+
+foreach my $r (@ARGV)
+{
+	$root_dir = abs_path($r);
+	finddepth(\&process, $r);
+}
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+	my $basename = basename(dirname($filepath));
+
+	# If it isn't a file, we don't do anything extra.
+	return unless (-f $_);
+	return if ($filepath =~ m@/_@);
+	return unless (m/\.html$/ || m/\.markdown$/);
+
+	# Report what we're processing.
+	print "Processing $filepath\n" if $verbose;
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	close INCLUDE;
+
+	my $content = $2;
+
+	# Grab the first part of the file which is a YAML structure.
+	my ($yaml) = Load($buffer);
+	my ($yaml2) = Load($buffer);
+
+	# Save the YAML structure for later so we can build up the
+	# indexes. We do this before we manipulate it for breadcrumbs to
+	# keep it clean.
+	delete $$yaml{'includes'};
+	delete $$yaml{'breadcrumbs'};
+	delete $$yaml{'relative'};
+	$$yaml{"relativePath"} = $filepath;
+	$$yaml{"relativePath"} =~ s@$ARGV[0]@@;
+	$$yaml{"relativePath"} =~ s@^\.?/*@/@;
+	$$yaml{"relativePath"} =~ s@index\..*$@@;
+	$indexes{$dir} = $yaml;
+
+	# Get the parent index file, which will determine if this is a
+	# chapter or some other type of file.
+	my $parent_dir = dirname($$yaml{"relativePath"});
+
+	return if $parent_dir eq "/";
+
+	my $parent = "$parent_dir/index.markdown";
+	my $parent_filename = "$root_dir/$parent";
+	$parent_filename =~ s@//+@/@g;
+
+	return unless -f $parent_filename;
+
+	#print "  Parent: $parent\n";
+
+	# Load the parent file into memory.
+	open INCLUDE, "<$parent_filename"
+		or die "Cannot open $parent ($!)";
+	$buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	close INCLUDE;
+
+	# Grab the first part of the file which is a YAML structure. If
+	# this isn't a chapter organization, then skip it.
+	my ($parent_yaml) = Load($buffer);
+
+	return unless exists $$parent_yaml{"organization"};
+	return unless $$parent_yaml{"organization"} eq "Chapters";
+
+	#print "  Organized by chapters\n";
+
+	# Pull out the includes, we'll need those to figure out where we are.
+	my $includes = $$parent_yaml{'includes'};
+	my $index = 0;
+	my $found = 0;
+
+	foreach my $include (@$includes)
+	{
+		next unless exists $$include{"filename"};
+
+		if ($$include{"filename"} eq $basename)
+		{
+			$found = 1;
+			last;
+		}
+
+		$index++;
+	}
+
+	return unless $found;
+
+	# We now know where the file is in the parent, so we can create
+	# the relative indexes from what we have.
+	my %relative = ();
+
+	if ($index > 0)
+	{
+		my $previous = $$includes[$index - 1];
+		$$previous{"chapter"} = $index;
+		$relative{"previous"} = $previous;
+	}
+
+	if ($index + 1 < scalar(@$includes))
+	{
+		my $next = $$includes[$index + 1];
+		$$next{"chapter"} = $index + 2;
+		$relative{"next"} = $next;
+	}
+
+	$$yaml2{"relative"} = \%relative;
+
+	# Write everything back out.
+	open OUTPUT, ">$filename" or die "Cannot open $filename ($!)";
+	print OUTPUT Dump($yaml2), "---", $content;
+	close OUTPUT;
+}

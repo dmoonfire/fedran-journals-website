@@ -1,0 +1,273 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+my $root_directory = "";
+
+GetOptions(
+	"root=s" => \$root_directory,
+	"verbose" => \$verbose);
+
+# Go through the directories left on the argument list.
+my @indexes = ();
+my @pages = ();
+my %categories = ();
+
+finddepth(\&process, @ARGV);
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	return unless (-f $_);
+	return unless ($_ =~ /\.markdown$/);
+
+	# Report what we're processing.
+	print "Processing $filepath" if $verbose;
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---.*$/$1\n/s;
+	close INCLUDE;
+
+	# Grab the first part of the file which is a YAML structure.
+	my ($yaml, $ignore) = Load($buffer);
+
+	# Add in some additional elements.
+	$$yaml{"filename"} = $filepath;
+	$$yaml{"basename"} = $filepath;
+	$$yaml{"basename"} =~ s@^.*$root_directory/@@;
+	$$yaml{"basename"} =~ s@^/index.markdown$@@;
+
+	# Figure out if we are a TOC or page entry.
+	my $layout = $$yaml{"layout"};
+
+	if ($layout eq "toc" && exists $$yaml{"includesFilter"})
+	{
+		# Create a modified
+		print " [TOC]\n" if $verbose;
+		push @indexes, $yaml;
+		return;
+	}
+
+	# Normalize the title for inclusion.
+	$$yaml{"title"} =~ s@^(A|An|The) (.*)$@$2, $1@;
+
+	# Check for categories.
+	if (exists $$yaml{"categories"})
+	{
+		map { $categories{$_}++; } @{$$yaml{"categories"}};
+	}
+
+	# Add the page to the list.
+	print " [Page]\n" if $verbose;
+	push @pages, $yaml;
+}
+
+#
+# Sort the pages for a consistent order.
+#
+
+print "Sorting ", scalar(@pages), " pages into ",
+	scalar(@indexes), " indexes\n" if $verbose;
+
+@pages = sort custom @pages;
+
+sub custom
+{
+	my $title_a = $$a{title};
+	my $title_b = $$b{title};
+	return $title_a cmp $title_b;
+}
+
+#
+# Look to see if we need to create any indexes.
+#
+
+foreach my $category (sort keys %categories)
+{
+	add_default_index("categories", "Categories", $category);
+}
+
+#
+# Process the indexes
+#
+
+foreach my $index (@indexes)
+{
+	# Pull out information on the page.
+	my $basename = $$index{basename};
+
+	print "Populating $basename\n" if $verbose;
+
+	# Load in the two parts of the file.
+	my $filename = $$index{filename};
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filename ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ m/^---(.*?)---(.*)$/s;
+	close INCLUDE;
+
+	# Pull out the metadata and content and then parse the metadata as
+	# YAML.
+	my $metadata = $1;
+	my $content = $2;
+	my ($yaml) = Load($metadata);
+	my $filter = $$yaml{"includesFilter"};
+	my $relative_filename = $filename;
+	$relative_filename =~ s@index.markdown@@;
+
+	# Go through the list of pages and add each one to a list for this
+	# page. We apply the filters as a key/value comparison.
+	my @includes = ();
+
+	foreach my $page (@pages)
+	{
+		# Go through the keys in the filter.
+		my $includePage = 1;
+
+		foreach my $filterKey (keys(%$filter))
+		{
+			# If the page doesn't have a key, skip it.
+			unless (exists $$page{$filterKey})
+			{
+				$includePage = 0;
+				last;
+			}
+
+			# If the value is a sequence, then check contains.
+			my $value = $$page{$filterKey};
+			my $filterValue = $$filter{$filterKey};
+
+			if (ref($value) eq "ARRAY")
+			{
+				# Only skip the page if the value isn't in the list.
+				my %params = map { $_ => 1 } @$value;
+				unless (exists($params{$filterValue}))
+				{
+					$includePage = 0;
+					last;
+				}
+			}
+			else
+			{
+				# If the value doesn't match the filter, skip it.
+				unless ($value eq $filterValue)
+				{
+					$includePage = 0;
+					last;
+				}
+			}
+		}
+
+		# If we aren't including the page, we're done.
+		next unless ($includePage);
+
+		# We have to change the URL to something appropriate.
+		my $page_filename = $$page{filename};
+		$page_filename =~ s@/index.markdown@@;
+		$page_filename =~ s@$relative_filename@@;
+
+		$$page{url} = "/" . $$page{basename};
+		$$page{url} =~ s@/index.markdown@@;
+
+		# We're adding this list.
+		print "  Adding $$page{basename}\n" if $verbose;
+		push @includes, $page;
+	}
+
+	# Update the YAML.
+	$$yaml{includes} = \@includes;
+
+	# Write everything back out.
+	open OUTPUT, ">$filename" or die "Cannot open $filename ($!)";
+	print OUTPUT Dump($yaml), "---\n", $content;
+	close OUTPUT;
+}
+
+sub add_default_index
+{
+	# Pull out the fields we need.
+	my ($base_path, $category, $name) = @_;
+
+	# Normalize the theme name.
+	my $key = lc($name);
+	$key =~ s/\s+/-/g;
+
+	# Figure out the relative filename.
+	my $dir = "./" . $ARGV[0] . "/$base_path/$key";
+	my $path = "$dir/index.markdown";
+
+	# See if we have this file in the TOC collection.
+	my $found = 0;
+
+	foreach my $index (@indexes)
+	{
+		if ($$index{filename} eq $path)
+		{
+			$found = 1;
+			last;
+		}
+	}
+
+	# If we haven't found it, we need to create it.
+	if (!$found)
+	{
+		# We need to create the theme.
+		print "Creating $path: $name ($key)\n" if $verbose;
+
+		# Build up the faked YAML.
+		my %filter = ( lc($category) => $name );
+		my %yaml = (
+			"title" => $name,
+			"filename" => $path,
+			"layout" => "toc",
+			"organization" => "Stories",
+			"tagCollection" => $category,
+			"includesFilter" => \%filter,
+		);
+		$yaml{"basename"} = $path;
+		$yaml{"basename"} =~ s@^.*src/documents/@@;
+		$yaml{"basename"} =~ s@^/index.markdown$@@;
+
+		# Add it to the TOC list.
+		push @indexes, \%yaml;
+		push @pages, \%yaml;
+
+		# Write out the YAML.
+		system("mkdir -p $dir");
+		open OUTPUT, ">$path" or die "Cannot write $path ($!)";
+		print OUTPUT Dump(\%yaml);
+		print OUTPUT "---\n";
+		close OUTPUT;
+	}
+}

@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+my $if_missing = undef;
+my $set_file = undef;
+
+GetOptions(
+	"if-missing=s" => \$if_missing,
+	"set-file=s" => \$set_file,
+	"verbose" => \$verbose);
+
+# Loop through all the files we'll be adding.
+while (@ARGV)
+{
+	# The first element is the file to load and manipulate.
+	my $filename = shift @ARGV;
+	print "Processing $filename" if $verbose;
+	
+	# Load in the two parts of the file.
+	open FILE, "<$filename" or die "Cannot open $filename ($!)";
+	$/ = undef;
+	my $buffer = <FILE>;
+	
+	unless ($buffer =~ m/^---(.*?)---(.*)$/s)
+	{
+		print STDERR "$filename: Cannot parse YAML block!\n";
+		print STDERR $buffer, "\n";
+		exit 1;
+	}
+	
+	close FILE;
+	
+	# Pull out the metadata and content and then parse the metadata as
+	# YAML.
+	my $metadata = $1;
+	my $content = $2;
+	my ($yaml) = Load($metadata);
+	
+	# If we have the "--if-missing" flag, then just put it in.
+	if (defined($if_missing))
+	{
+		# If there isn't a key, add it.
+		my @parts = split(/:/, $if_missing, 2);
+
+		unless (exists $$yaml{$parts[0]})
+		{
+			$$yaml{$parts[0]} = $parts[1];
+		}
+	}
+	
+	if (defined($set_file))
+	{
+		# Load the insert file into memory.
+		my ($insert_key, $insert_file) = split(/:/, $set_file, 2);
+
+		open FILE, "<$insert_file" or die "Cannot open $insert_file ($!)";
+		my $insert = <FILE>;
+		$insert =~ s/^---(.*?)---(.*)$/$1/s;
+		my ($insert_yaml) = Load($insert);
+		close FILE;
+		
+		# Insert the YAML into the file.
+		$$yaml{$insert_key} = $insert_yaml;
+	}
+	
+	# Write everything back out.
+	open OUTPUT, ">$filename" or die "Cannot open $filename ($!)";
+	print OUTPUT Dump($yaml), "---", $content;
+	close OUTPUT;
+}

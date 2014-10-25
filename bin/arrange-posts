@@ -1,0 +1,484 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use Cwd;
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+my $year_layout = "year-archive";
+my $month_archive = "month-archive";
+my $day_archive = "day-archive";
+my @insert = ();
+my $insert_limit = 20;
+my $filter = undef;
+my $site = "";
+
+GetOptions(
+	"verbose" => \$verbose,
+	"insert=s@" => \@insert,
+	"filter=s" => \$filter,
+	"site=s" => \$site);
+
+my $input = $ARGV[0];
+my $format = $ARGV[2];
+my $relative_path = $ARGV[1];
+my $path = getcwd() . "/$relative_path";
+my $format_path = "$path/$format";
+
+# Go through all the posts. We'll add in the appropriate metadata tags
+# into each one to allow us to build up a TOC entry. Once we are done,
+# we'll have a list of all the years and month that need archive
+# entries.
+
+# Go through the directories left on the argument list. We do an
+# initial scan to figure out the YAML structures for the "before" and
+# "after".
+my %posts = ();
+my %years = ();
+my %post_yaml = ();
+
+finddepth(\&scan, $input);
+
+my @ordered_posts = sort keys %posts;
+
+finddepth(\&process, $input);
+
+sub scan
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	if (defined $filter)
+	{
+		return unless $filepath =~ m@$filter@;
+	}
+
+	return unless (-f $filename);
+
+	if (m/\.(jpg|gif|png)$/)
+	{
+		if ($filepath =~ m@/(\d\d\d\d)-(\d\d)-(\d\d)-([^/]+)/@)
+		{
+			# See if we can copy the image into the directory.
+			my ($year, $month, $day, $slug) = ($1, $2, $3, $4);
+			my $copy = $format_path;
+			$copy =~ s@/index.(markdown|html)$@@;
+			$copy =~ s@YYYY@$year@g;
+			$copy =~ s@MM@$month@g;
+			$copy =~ s@DD@$day@g;
+			$copy =~ s@SLUG@$slug@g;
+
+			# Make the directory if we don't have it.
+			print STDERR "Copying $filename\n" if $verbose;
+			system("mkdir", "-p", $copy);
+			system("cp", $filename, "$copy/$filename");
+			return;
+		}
+	}
+
+	unless (m/\.html$/ || m/\.markdown$/)
+	{
+		return;
+	}
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---.*$/$1\n/s;
+	close INCLUDE;
+
+	# Grab the first part of the file which is a YAML structure.
+	$buffer =~ s@\t@    @sg;
+	my ($yaml) = Load($buffer);
+
+	# Parse the format to add in the entries as "yearArchive" and
+	# "monthArchive". Naturaly, we use ISO dates because that is the
+	# only date format.
+	unless ($filepath =~ m@/(\d+)-(\d+)-(\d+)-(.*?)?$@)
+	{
+		print STDERR "$filename: Cannot parse filename.\n";
+		return;
+	}
+
+	my ($year, $month, $day, $slug) = ($1, $2, $3, $4);
+
+	# Keep track of our years, months, and days.
+	my $months = $years{$year};
+	$months = {} unless defined $months;
+	$years{$year} = $months;
+	my $days = $$months{$month};
+	$days = {} unless defined $days;
+	$$days{$day}++;
+	$$months{$month} = $days;
+
+	# Add in the YAML elements.
+	my $title = $$yaml{"title"};
+
+	if (!defined $title)
+	{
+		print STDERR "Cannot find title in $filename.\n";
+		return;
+	}
+
+	#$$yaml{"includeYear"} = $year;
+	$$yaml{"includeYearMonth"} = "$year-$month";
+	$$yaml{"includeYearMonthDay"} = "$year-$month-$day";
+	$$yaml{"postDate"} = "$year-$month-$day";
+	$$yaml{"postYear"} = $year;
+	$$yaml{"postMonth"} = $month;
+	$$yaml{"postDay"} = $day;
+	$$yaml{"sortTitle"} = $filename;
+
+	# Figure the output paths.
+	my $output = $format_path;
+	$output =~ s@/index.(markdown|html)$@@;
+	$output =~ s@YYYY@$year@g;
+	$output =~ s@MM@$month@g;
+	$output =~ s@DD@$day@g;
+	$output =~ s@SLUG@$slug@g;
+	$$yaml{"output"} = $output;
+
+	# Figure out the URL for inclusion.
+	my $url = $output;
+	$url =~ s@$path@@sg;
+	$url =~ s@\.(markdown|html)@/@sg;
+	$url =~ s@/index/$@/@sg;
+	$$yaml{"url"} = $url;
+
+	# Save the YAML and the filename for our associations.
+	$posts{$filepath} = $yaml;
+}
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	if (defined $filter)
+	{
+		return unless $filepath =~ m@$filter@;
+	}
+
+	return unless (-f $filename);
+	return unless (m/\.html$/ || m/\.markdown$/);
+
+	# Report what we're processing.
+	print "Processing $filename\n" if $verbose;
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	my $content = $2;
+	close INCLUDE;
+
+	# Grab the first part of the file which is a YAML structure.
+	$buffer =~ s@\t@    @sg;
+	my ($yaml) = Load($buffer);
+	my $scan_yaml = $posts{$filepath};
+	$$yaml{output} = $$scan_yaml{"output"};
+	$$yaml{url} = $$scan_yaml{"url"};
+	$$yaml{"includeYearMonth"} = $$scan_yaml{"includeYearMonth"};
+	$$yaml{"includeYearMonthDay"} = $$scan_yaml{"includeYearMonthDay"};
+	$$yaml{"postDate"} = $$scan_yaml{"postDate"};
+	$$yaml{"postYear"} = $$scan_yaml{"postYear"};
+	$$yaml{"postMonth"} = $$scan_yaml{"postMonth"};
+	$$yaml{"postDay"} = $$scan_yaml{"postDay"};
+	$$yaml{"sortTitle"} = $$scan_yaml{"sortTitle"};
+
+	# Save the YAML based on the name.
+	$post_yaml{$filepath} = $yaml;
+
+	# Figure out the associations between this blog post.
+	my ($post_index) =
+		grep { $ordered_posts[$_] eq $filepath } 0..$#ordered_posts;
+
+	print STDERR "  Index: $post_index/" . scalar(@ordered_posts) ."\n"
+		if $verbose;
+
+	my $before_post = undef;
+	my $after_post = undef;
+
+	if ($post_index > 0)
+	{
+		$before_post = $ordered_posts[$post_index - 1];
+		$before_post = $posts{$before_post};
+		$$yaml{"previous"} = $before_post;
+
+		print STDERR "  Before: " . $$before_post{"url"} . "\n"
+			if $verbose;
+	}
+
+	if ($post_index + 1 < scalar(@ordered_posts))
+	{
+		$after_post = $ordered_posts[$post_index + 1];
+		$after_post = $posts{$after_post};
+		$$yaml{"next"} = $after_post;
+
+		print STDERR "  After: " . $$after_post{"url"} . "\n"
+			if $verbose;
+	}
+
+	# Adjust the output links.
+	$content = adjust_markdown_links($site, $yaml, $content);
+	$content = adjust_html_links($site, $yaml, $content);
+
+	# Figure the output file.
+	my $output = $$yaml{"output"};
+ 
+	# Make sure we have a directory.
+	my $output_dir = dirname($output);
+	system("mkdir -p '$output_dir'");
+
+	# Write everything back out.
+	open OUTPUT, ">$output" or die "Cannot open $output ($!)";
+	print OUTPUT Dump($yaml), "---", $content;
+	close OUTPUT;
+}
+
+#
+# Create the entries
+#
+
+# Go through all the years.
+foreach my $year (sort { $a cmp $b } keys %years)
+{
+	# Create the year directory, if we don't have it.
+	my $year_dir = $format_path;
+	$year_dir =~ s@YYYY@$year@;
+	$year_dir =~ s@[/-]MM@@;
+	$year_dir =~ s@[/-]DD@@;
+	$year_dir =~ s@[/-]SLUG@@;
+
+	print STDERR "Generating year $year:";
+	system("mkdir -p '$year_dir'");
+	
+ 	# Create the year file.
+ 	open YEAR, ">$year_dir/index.markdown"
+ 		or die "Cannot write $year_dir/index.markdown ($!)";
+ 	print YEAR join("\n",
+ 					"---",
+ 					"layout: toc",
+ 					"title: $year Archive",
+					"breadcrumbTitle: 'LEADING" . sprintf("%04d", $year) . "'",
+ 					"includesFilter:",
+					"  includeYear: '$year'",
+					"isYearArchive: yes",
+					"organization: Months",
+					"order: reversed",
+					"disqus: disable",
+					"shiftArticles: no",
+ 					"---"), "\n";
+ 	close YEAR;
+
+ 	# Go through the months.
+ 	my $months = $years{$year};
+
+	foreach my $month (sort { $a <=> $b } keys %$months)
+	{
+		# Create the year directory, if we don't have it.
+		my $month_dir = $format_path;
+		$month_dir =~ s@YYYY@$year@;
+		$month_dir =~ s@MM@$month@;
+		$month_dir =~ s@[/-]DD@@;
+		$month_dir =~ s@[/-]SLUG@@;
+		
+		# Create the month file.
+		print STDERR " $month";
+
+		my $monthdir ="$month_dir";
+		system("mkdir -p '$month_dir'");
+		
+ 		open MONTH, ">$month_dir/index.markdown"
+ 			or die "Cannot write $month_dir/index.markdown ($!)";
+ 		print MONTH join("\n",
+						 "---",
+						 "title: $year-$month Archive",
+						 # We have to use LEADING because we want to
+						 # keep the leading zero, but Liquid strips it
+						 # out unless we force it into a string first.
+						 "breadcrumbTitle: 'LEADING" . sprintf("%02d", $month) . "'",
+						 "layout: toc",
+						 "includesFilter:",
+						 "  includeYearMonth: '$year-$month'",
+						 "includeYear: '$year'",
+						 "organization: Posts",
+						 "order: reversed",
+						 "disqus: disable",
+						 "shiftArticles: no",
+						 "---"), "\n";
+ 		close MONTH;
+
+ 		# Go through the day files.
+ 		my $days = $$months{$month};
+		
+ 		foreach my $day (sort { $a <=> $b } keys %$days)
+ 		{
+			# Create the year directory, if we don't have it.
+			my $day_dir = $format_path;
+			$day_dir =~ s@YYYY@$year@;
+			$day_dir =~ s@MM@$month@;
+			$day_dir =~ s@DD@$day@;
+			$day_dir =~ s@[/-]SLUG@@;
+
+			# Create the day file.
+			system("mkdir -p '$day_dir'");
+		
+ 			# Create the day file.
+ 			#print STDERR " $day" if $verbose;
+			
+ 			open DAY, ">$day_dir/index.markdown"
+ 				or die "Cannot write $day_dir/index.markdown ($!)";
+ 			print DAY join("\n",
+						   "---",
+						   "title: $year-$month-$day Archive",
+						   "breadcrumbTitle: 'LEADING" . sprintf("%02d", $day) . "'",
+						   "layout: toc",
+						   "includesFilter:",
+						   "  includeYearMonthDay: '$year-$month-$day'",
+						   "organization: Posts",
+						   "order: reversed",
+						   "disqus: disable",
+						   "shiftArticles: no",
+						   "---"), "\n";
+ 			close DAY;
+ 		}
+
+		# Finish up the month.
+		#print STDERR ",";
+ 	}
+
+	# Finish the year.
+	print STDERR "\n";
+}
+
+#
+# Insert the YAML into the requested files.
+#
+
+# Normalize the list. We sort it based on filenames, reverse it so the
+# first is on top, then limit it to the X items before creating an
+# array of the YAML elements.
+my @post_names = sort keys %post_yaml;
+@post_names = reverse @post_names;
+$insert_limit = scalar(@post_names)if $insert_limit > scalar(@post_names);
+@post_names = @post_names[0 .. ($insert_limit - 1)];
+
+my @posts_inserted = map { $post_yaml{$_} } @post_names;
+
+# Insert the data into the files.
+foreach my $insert (@insert)
+{
+	# Insert the stubs into the appropriate files.
+	print STDERR "Insert $insert\n";
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$insert"
+		or die "Cannot open $insert ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	close INCLUDE;
+
+	my $content = $2;
+	my ($yaml) = Load($buffer);
+
+	# Insert the blog YAML into place.
+	$$yaml{"blogs"} = \@posts_inserted;
+
+	# Write it back out.
+	open OUTPUT, ">$insert" or die "Cannot open $insert ($!)";
+	print OUTPUT Dump($yaml), "---", $content;
+	close OUTPUT;
+}
+
+sub adjust_markdown_links
+{
+	my ($site, $yaml, $content) = @_;
+	my $new_content = "";
+
+	while ($content =~ s@^(.*?\[[^\]]+\]\()(.*?)\)@@s)
+	{
+		my $url = $2;
+		$new_content .= $1;
+
+		unless ($url =~ m@^http@)
+		{
+			if ($url =~ m@^/@)
+			{
+				$url = $site . $url;
+			}
+			else
+			{
+				$url = $site . $$yaml{url} . $url;
+			}
+		}
+		
+		$new_content .= "$url)";
+	}
+
+	$new_content .= $content;
+	return $new_content;
+}
+
+sub adjust_html_links
+{
+	my ($site, $yaml, $content) = @_;
+	my $new_content = "";
+
+	while ($content =~ s@^(.*?(?:src|href)=[\'\"])(.*?[\"\'])@@s)
+	{
+		my $url = $2;
+		$new_content .= $1;
+
+		unless ($url =~ m@^http@)
+		{
+			if ($url =~ m@^/@)
+			{
+				$url = $site . $url;
+			}
+			else
+			{
+				$url = $site . $$yaml{url} . $url;
+			}
+		}
+		
+		$new_content .= "$url";
+	}
+
+	$new_content .= $content;
+	return $new_content;
+}
