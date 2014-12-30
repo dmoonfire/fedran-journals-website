@@ -1,5 +1,5 @@
-name: "Sand and Blood"
-baseUrl: http://sand-and-blood.fedran.com
+name: "Journals of Fedran"
+baseUrl: http://journals.fedran.com
 markdown: redcarpet
 pygments: false
 
@@ -17,7 +17,7 @@ disqus:
 
 piwik:
   enabled: true
-  id: 14
+  id: 15
   server: stats.moonfire.us
 
 # Table of Contents and collections. If this isn't missed, the TOC by default will put "by" and the name of the author.
