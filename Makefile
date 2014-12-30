@@ -148,6 +148,8 @@ local-copy-files:
 
 	convert $(COVER_IMG) -scale 50% build/jekyll/img/cover.jpg
 	convert $(COVER_IMG) -scale x160 build/jekyll/img/cover-160.jpg
+	convert $(COVER_IMG) -scale x256 build/jekyll/img/cover-256.jpg
+	convert $(COVER_IMG) -scale x512 build/jekyll/img/cover-512.jpg
 
 	cp $(COVER_IMG) build/jekyll/img/cover-2554.jpg
 
