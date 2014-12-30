@@ -1,0 +1,67 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Dirctives
+use strict;
+use warnings;
+
+# Modules
+use Getopt::Long;
+
+#
+# Arguments
+#
+
+my $layout = "default";
+
+GetOptions(
+	"layout=s" => \$layout);
+
+#
+# Process the input
+#
+
+my $break_count = 0;
+my $found_layout = 0;
+
+while (<>)
+{
+	# Check for the separator.
+	if (m/^---$/)
+	{
+		# Update the break counter, which we use to trigger certain
+		# modifications.
+		$break_count++;
+
+		# If we are beyond the YAML, then include our mandatory flags.
+		if ($break_count == 2)
+		{
+			print "layout: $layout\n" unless $found_layout;
+		}
+
+		# Print out the line and finish up.
+		print;
+		next;
+	}
+
+	# If we are in the YAML but not beyond it, normalize it.
+	if ($break_count == 1)
+	{
+		if (s/^(\s*(- )?[A-Z]+)/PLACEHOLDER/)
+		{
+			my $lc = lc($1);
+			s/PLACEHOLDER/$lc/;
+		}
+
+		$found_layout = 1 if m/^layout:/;
+	}
+
+	# If we have a section, bump it up a level.
+	s@^#@##@;
+
+	# Print the line.
+	print;
+}

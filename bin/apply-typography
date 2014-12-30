@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Dirctives
+use strict;
+use warnings;
+
+# Modules
+use Text::Typography qw(typography);
+
+#
+# Process the input
+#
+
+my $in_yaml = 0;
+my $beyond_yaml = 0;
+my $in_code = 0;
+my $buffer = "";
+
+while (<>)
+{
+	# Check for the separator.
+	if (m/^---$/)
+	{
+		$beyond_yaml = 1 if $in_yaml;
+		$in_yaml = 1 unless $in_yaml;
+		print;
+		next;
+	}
+
+	# Just print out the YAML stuff.
+	if ($beyond_yaml == 0)
+	{
+		print;
+		next;
+	}
+
+	# If we have a ``` block, we need to escape it.
+	if (/^```/)
+	{
+		if ($in_code == 0)
+		{
+			$in_code = 1;
+			print;
+			next;
+		}
+		else
+		{
+			$in_code = 0;
+			print;
+			next;
+		}
+	}
+
+	if ($in_code)
+	{
+		print;
+		next;
+	}
+
+	# If we have a blank line, then flush.
+	if (/^\s*$/)
+	{
+		apply();
+		print;
+		next;
+	}
+
+	# Add the line to the buffer. We don't write it out because we
+	# want to handle multi-line for the old-style processing.
+	$buffer .= $_;
+	next;
+}
+
+# Apply any remaining buffers.
+apply();
+
+sub apply
+{
+	# If we don't have a buffer, don't do anything.
+	return if ($buffer eq "");
+
+	# Print out the buffer.
+	print typography($buffer, "qdDe");
+
+	# Clear out the buffer for the next paragraph.
+	$buffer = "";
+}

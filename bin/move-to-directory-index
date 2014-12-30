@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Basename;
+
+# Settings
+my $DEBUG = 0;
+
+#
+# Go through the inputs
+#
+
+while (@ARGV)
+{
+	# Pull out the relevant components.
+	my $filename = shift @ARGV;
+	my $basename = basename($filename);
+	my $dirname = dirname($filename);
+	my $extension = "";
+	$extension = $1 if $basename =~ s@\.(\w+)$@@;
+
+	print STDERR "Processing $filename ($basename)\n" if $DEBUG;
+
+	# If the file is "index", we are done.
+	next if $basename eq "index";
+
+	# Figure out the directory to create.
+	my $new_directory = "$dirname/$basename";
+	my $new_filename = "$dirname/$basename/index.$extension";
+
+	# Create the directory, if needed.
+	system("mkdir", "-p", $new_directory);
+	rename($filename, $new_filename);
+}

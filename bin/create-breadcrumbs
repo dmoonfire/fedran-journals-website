@@ -1,0 +1,101 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+
+GetOptions("verbose" => \$verbose);
+
+# Go through the directories left on the argument list.
+my %indexes = ();
+
+finddepth(\&process, @ARGV);
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	return unless (-f $_);
+	return if ($filepath =~ m@/_@);
+	return unless (m/\.html$/ || m/\.markdown$/);
+
+	# Report what we're processing.
+	print "Processing $filepath\n" if $verbose;
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	close INCLUDE;
+
+	my $content = $2;
+
+	# Grab the first part of the file which is a YAML structure.
+	my ($yaml) = Load($buffer);
+	my ($yaml2) = Load($buffer);
+
+	# Save the YAML structure for later so we can build up the
+	# indexes. We do this before we manipulate it for breadcrumbs to
+	# keep it clean.
+	delete $$yaml{'includes'};
+	delete $$yaml{'breadcrumbs'};
+	$$yaml{"relativePath"} = $filepath;
+	$$yaml{"relativePath"} =~ s@$ARGV[0]@@;
+	$$yaml{"relativePath"} =~ s@^\.?/*@/@;
+	$$yaml{"relativePath"} =~ s@index\..*$@@;
+	$indexes{$dir} = $yaml;
+
+	# Create a sequence of breadcrumbs to follow. We also mark the
+	# first one as 'active'.
+	my @breadcrumbs = ($yaml);
+
+	$$yaml{'active'} = "true";
+	
+	# Go through up through the directories until we stop finding
+	# elements. For each one, we unshift it to stick it in front.
+	$dir = dirname($dir);
+
+	while (exists $indexes{$dir})
+	{
+		unshift @breadcrumbs, $indexes{$dir};
+		$dir = dirname($dir);
+	}
+
+	# Put the breadcrumbs back.
+	$$yaml2{'breadcrumbs'} = \@breadcrumbs;
+
+	# Write everything back out.
+	open OUTPUT, ">$filename" or die "Cannot open $filename ($!)";
+	print OUTPUT Dump($yaml2), "---", $content;
+	close OUTPUT;
+
+	# Clean up the YAML in memory.
+	$$yaml{"active"} = "false";
+}

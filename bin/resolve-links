@@ -1,0 +1,90 @@
+#!/usr/bin/perl
+
+# Goes through the given Markdown files and substitutes [Name]() with a top-level link and a stubbed version of the name.
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+
+GetOptions(
+	"verbose" => \$verbose);
+
+# Go through the directories left on the argument list.
+finddepth(\&process, @ARGV);
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	return unless (-f $_);
+	return unless ($_ =~ /\.markdown$/);
+
+	# Report what we're processing.
+	print "Scanning $filepath\n" if $verbose;
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	my $content = $2;
+	close INCLUDE;
+
+	# Go through and resolve the empty links.
+	my $changed = 0;
+	my $placeholder = "PLACEHOLDER-oldsijf";
+
+	while ($content =~ s@\[([^\]]+)\]\(\)@$placeholder@s)
+	{
+		# Create a stub version of the link.
+		my $name = $1;
+		my $link = lc($name);
+		$link =~ s/\s+/-/sg;
+		$link =~ s/\'//sg;
+		$link =~ s@&#8217;@@sg;
+		$link = "/$link/";
+
+		# Report the link creation.
+		print "  $name -> $link\n" if $verbose;
+
+		# Write ito ut.
+		$content =~ s@$placeholder@[$name]($link)@s;
+		$changed = 1;
+	}
+
+	# Put the file back if we made a change.
+	if ($changed)
+	{
+		# Put everything back.
+		open OUTPUT, ">$filename"
+			or die "Cannot write $filepath ($!)";
+		print OUTPUT "---\n$buffer\n---\n", $content;
+		close OUTPUT;
+	}
+}

@@ -25,20 +25,31 @@ DEFAULT_LAYOUT = page
 all: generate
 
 clean:
-	rm -rf build dist
+	rm -rf build dist/*
+
+reallyclean: clean
+	rm -rf dist
 
 prepare:
 	if [ ! -d build/jekyll ];then mkdir -p build/jekyll;fi
 	if [ ! -d dist ];then mkdir dist;fi
 
 bootstrap: prepare
+	if [ ! -d lib/bootstrap ]; then \
+		echo "ERROR: lib/bootstrap is not populated"; \
+		echo "ERROR: cd lib && git clone https://github.com/twbs/bootstrap.git"; \
+		echo "ERROR: Stopping processing"; \
+		false; \
+		exit; \
+	fi
+
 	if [ ! -d build/jekyll/css ];then mkdir -p build/jekyll/css;fi
 	rsync -a lib/bootstrap/less/ build/bootstrap/
 	rsync -a less/ build/bootstrap
 	lessc -x build/bootstrap/style.less > build/jekyll/css/style.css
 	lessc -x build/bootstrap/bootstrap.less > build/jekyll/css/bootstrap.css
 
-copy: prepare local-pre-copy
+copy: bootstrap local-pre-copy
 # Copy in the base Jekyll installation. This will include the
 # configuration, layouts, includes, and related files that are
 # specific to Jekyll itself.
@@ -78,23 +89,23 @@ copy: prepare local-pre-copy
 # Move all "file.markdown" into file/index.markdown for clean URLs.
 	find build/jekyll/ -name "*.html" -o -name "*.markdown" \
 		| grep -v '/_' \
-		| xargs lib/mfgames-jekyll/move-to-directory-index
+		| xargs bin/move-to-directory-index
 
 # Go through all the files and make sure they have a layout (because
 # we don't want to require it) and they have fancy typography (curly
 # quotes, em dashes).
 	for f in $$(find build/jekyll -name "*.markdown"); do \
 		cat $$f \
-		| lib/mfgames-jekyll/normalize-markdown-yaml --layout=$(DEFAULT_LAYOUT) \
-		| lib/mfgames-jekyll/apply-typography \
+		| bin/normalize-markdown-yaml --layout=$(DEFAULT_LAYOUT) \
+		| bin/apply-typography \
 		> tmp.markdown; \
 		mv tmp.markdown $$f; \
 	done
 
 # Create the taxonomies, collections, and breadcrumbs.
-	lib/mfgames-jekyll/create-collections build/jekyll --root=build/jekyll
-	lib/mfgames-jekyll/create-breadcrumbs build/jekyll
-	lib/mfgames-jekyll/create-chapter-links build/jekyll
+	bin/create-collections build/jekyll --root=build/jekyll
+	bin/create-breadcrumbs build/jekyll
+	bin/create-chapter-links build/jekyll
 
 # Call the local-process-files hook. This is used to make changes to
 # the various websites after they have been normalized and arranged in
@@ -162,9 +173,9 @@ local-process-files:
 # explictly added.
 #	find build/jekyll/ -name "*.html" -o -name "*.markdown" \
 #		| grep -v '/_' \
-#		| xargs lib/mfgames-jekyll/insert-yaml --if-missing=showFlattr:true
+#		| xargs bin/insert-yaml --if-missing=showFlattr:true
 #	find build/jekyll/_posts/ -name "*.html" -o -name "*.markdown" \
-#		| xargs lib/mfgames-jekyll/insert-yaml --if-missing=showFlattr:true
+#		| xargs bin/insert-yaml --if-missing=showFlattr:true
 
 local-post-generate:
 # The local-post-generate hook is useful for going through the full

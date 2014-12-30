@@ -1,0 +1,411 @@
+#!/usr/bin/perl
+
+# Goes through the given Markdown files and substitutes {{Name}} with
+# the output of an inline plugin.
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+my $root_directory = "";
+my @plugin_scripts = ();
+
+GetOptions(
+	"root=s" => \$root_directory,
+	"verbose" => \$verbose,
+	"plugin=s" => \@plugin_scripts);
+
+# Load in the plugins.
+foreach my $script (@plugin_scripts)
+{
+	print "Loading: $script\n" if $verbose;
+	require($script);
+}
+
+# Go through the directories left on the argument list.
+my @indexes = ();
+my @pages = ();
+my %categories = ();
+my @needs_processing = ();
+
+finddepth(\&process, @ARGV);
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	return unless (-f $_);
+	return unless ($_ =~ /\.markdown$/);
+
+	# Report what we're processing.
+	print "Scanning $filepath" if $verbose;
+
+	# Open up the file and pull out the YAML contents.
+	$/ = undef;
+
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filepath ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	my $content = $2;
+	close INCLUDE;
+
+	# If we see a plugin, add it to the list of files to process.
+	if ($content =~ m@{{[^\}]+}}@)
+	{
+		print " [Plugin]" if $verbose;
+		push @needs_processing, $filepath;
+	}
+
+	# Grab the first part of the file which is a YAML structure.
+	my ($yaml, $ignore) = Load($buffer);
+
+	# Add in some additional elements.
+	$$yaml{"filename"} = $filepath;
+	$$yaml{"basename"} = $filepath;
+	$$yaml{"basename"} =~ s@^.*$root_directory/@@sig;
+	$$yaml{"basename"} =~ s@/index.markdown$@@sig;
+	$$yaml{"basename"} =~ s@/+$@@sig;
+	$$yaml{"basename"} .= "/";
+
+	# Normalize the title for inclusion.
+	$$yaml{"title"} =~ s@^(A|An|The) (.*)$@$2, $1@;
+
+	# Check for categories.
+	if (exists $$yaml{"categories"})
+	{
+		foreach my $category (@{$$yaml{"categories"}})
+		{
+			$category = lc($category);
+			unless (exists $categories{$category})
+			{
+				my @ref = ();
+				$categories{$category} = \@ref;
+			}
+
+			my $ref = $categories{$category};
+			push @$ref, $yaml;
+		}
+	}
+
+	# Add the page to the list.
+	print " [Page]\n" if $verbose;
+	push @pages, $yaml;
+}
+
+#
+# Process the files that need work.
+#
+
+foreach my $filename (@needs_processing)
+{
+	# Process the file.
+	print "Processing $filename\n";
+
+	# Load in the YAML and content.
+	open INCLUDE, "<$filename"
+		or die "Cannot open $filename ($!)";
+	my $buffer = <INCLUDE>;
+	$buffer =~ s/^---(.*?)---(.*)$/$1\n/s;
+	my $content = $2;
+	close INCLUDE;
+
+	# Grab the first part of the file which is a YAML structure.
+	my ($yaml, $ignore) = Load($buffer);
+
+	# Loop through and replace each category.
+	my $placeholder = "PLACEHOLDER-1234";
+	while ($content =~ s@\{\{([^\}]+)\}\}@$placeholder@s)
+	{
+		# Figure out the plugin and resolve it.
+		my $plugin_name = $1;
+		my $plugin_contents = render($plugin_name, $yaml);
+
+		# Put the plugin back.
+		$content =~ s@$placeholder@$plugin_contents@s;
+	}
+
+	# Put everything back.
+	open OUTPUT, ">$filename"
+		or die "Cannot write $filename ($!)";
+	print OUTPUT Dump($yaml), "---", $content;
+	close OUTPUT;
+}
+
+#
+# Render
+#
+
+# This method handles the rendering of the plugin and getting the
+# resulting Markdown value from the contents.
+sub render
+{
+	# Get the parameters.
+	my ($plugin_name, $yaml) = @_;
+
+	# Get the plugin.
+	my $plugins = $$yaml{"plugins"};
+	my $plugin = $$plugins{$plugin_name};
+
+	# If we don't have a plugin, then it is a function.
+	if (!defined $plugin)
+	{
+		return render_function($plugin_name, $yaml);
+	}
+
+	# Figure out the type of plugin (hint, it's insert category).
+	my $plugin_type = lc($$plugin{"type"});
+
+	if ($plugin_type eq "insert category")
+	{
+		return render_insert_category($plugin_name, $plugin);
+	}
+	else
+	{
+		return "**UNKNOWN PLUGIN: $plugin_name\n";
+	}
+}
+
+sub render_function
+{
+	# Pull out the variables from the function.
+	my ($name, $yaml) = @_;
+
+	# Check for colon-arguments.
+	if ($name =~ m@^(\w+):\s*(.*)$@)
+	{
+		my $function = $1;
+		my $args = $2;
+
+		my $s = eval("render_function_$function(\$args);");
+		return $s;
+	}
+
+	return "*** Unknown Function: name\n";
+}
+
+sub render_insert_category
+{
+	# Get the parameters out.
+	my $name = shift @_;
+	my $yaml = shift @_;
+	my $category = lc($$yaml{"category"});
+
+	# Pull out the format.
+	my $format = $$yaml{"format"};
+	$format = "2col" unless defined $format;
+	$format = lc($format);
+
+	# Report the category we're working with.
+	print "  $name: Insert category: $category ($format)\n";
+
+	# See if we have the category.
+	unless (exists $categories{$category})
+	{
+		return "ERROR: Cannot find items in category: $category\n";
+	}
+
+	# Gather up the pages in an ordered list.
+	my @pages = sort bytitle @{$categories{$category}};
+
+	# Based on the mode, figure out the format.
+	if ($format eq "list")
+	{
+		return render_insert_category_list($name, $yaml, \@pages);
+	}
+	elsif ($format eq "2col")
+	{
+		return render_insert_category_2col($name, $yaml, \@pages);
+	}
+	elsif ($format eq "3col")
+	{
+		return render_insert_category_3col($name, $yaml, \@pages);
+	}
+	else
+	{
+		return "*** $name: Unknown list format: $format\n";
+	}
+}
+
+sub render_insert_category_list
+{
+	# Pull out the parameters.
+	my ($name, $yaml, $pages) = @_;
+
+	# Go through all the pages in this category.
+	my $buffer = "";
+
+	foreach my $page (@$pages)
+	{
+		# Pull out some data and normalize it.
+		my $title = $$page{title};
+		my $link = "/" . $$page{basename} . "/";
+		my $summary = $$page{summary};
+
+		$summary = "" unless defined $summary;
+		$summary = ": $summary" if length($summary) > 1;
+
+		$buffer .= "* [$title]($link)$summary\n";
+	}
+
+	# Return the resulting buffer.
+	return "$buffer\n";
+}
+
+sub render_insert_category_2col
+{
+	# Pull out the parameters.
+	my ($name, $yaml, $pages) = @_;
+
+	# We need to render two columns in roughly equal lengths.
+	my $page_count = scalar(@$pages);
+	my $col_length = $page_count - int($page_count / 2);
+	my @col1 = @$pages;
+	my @col2 = @$pages;
+
+	splice @col2, 0, $col_length;
+	splice @col1, $col_length;
+
+	die "You have a math bug here" 
+		if scalar(@col1) + scalar(@col2) != $page_count;
+
+	# Go through all the pages and generate the links.
+	my $buffer = "<div class='row insert-category-col'>\n";
+
+	$buffer .= "<div class='col-md-6'>\n";
+	$buffer .= render_insert_category_col_inner($yaml, @col1);
+	$buffer .= "</div>\n";
+
+	$buffer .= "<div class='col-md-6'>\n";
+	$buffer .= render_insert_category_col_inner($yaml, @col2);
+	$buffer .= "</div>\n";
+
+	$buffer .= "</div>\n";
+
+	# Return the resulting buffer.
+	return "$buffer\n";
+}
+
+sub render_insert_category_3col
+{
+	# Pull out the parameters.
+	my ($name, $yaml, $pages) = @_;
+	my @pages = @$pages;
+
+	# We need to render three columns in roughly equal lengths.
+	my $page_count = scalar(@pages);
+	my $col_length = int($page_count / 3);
+	my ($col_length_1, $col_length_2, $col_length_3) =
+		($col_length, $col_length, $col_length);
+	my $remainder = $page_count - $col_length;
+	
+	if ($remainder == 2)
+	{
+		$col_length_1++;
+		$col_length_3++;
+	}
+	elsif ($remainder == 1)
+	{
+		$col_length_2++;
+	}
+
+	# Pull out the lists.
+	my @col1 = splice @pages, 0, $col_length_1;
+	my @col2 = splice @pages, 0, $col_length_2;
+	my @col3 = @pages;
+
+	die "You have a math bug here" 
+		if scalar(@col1) + scalar(@col2) + scalar(@col3) != $page_count;
+
+	#print STDERR "    pages $page_count\n";
+	#print STDERR "    $col_length_1 => " . scalar(@col1) . "\n";
+	#print STDERR "    $col_length_1 => " . scalar(@col2) . "\n";
+	#print STDERR "    $col_length_1 => " . scalar(@col3) . "\n";
+
+	# Go through all the pages and generate the links.
+	my $buffer = "<div class='row insert-category-col'>\n";
+
+	$buffer .= "<div class='col-md-4'>\n";
+	$buffer .= render_insert_category_col_inner($yaml, @col1);
+	$buffer .= "</div>\n";
+
+	$buffer .= "<div class='col-md-4'>\n";
+	$buffer .= render_insert_category_col_inner($yaml, @col2);
+	$buffer .= "</div>\n";
+
+	$buffer .= "<div class='col-md-4'>\n";
+	$buffer .= render_insert_category_col_inner($yaml, @col3);
+	$buffer .= "</div>\n";
+
+	$buffer .= "</div>\n";
+
+	# Return the resulting buffer.
+	return "$buffer\n";
+}
+
+sub render_insert_category_col_inner
+{
+	my $buffer = "";
+	my $yaml = shift @_;
+	
+	foreach my $page (@_)
+	{
+		# Pull out some data and normalize it.
+		my $title = $$page{title};
+		my $link = "/" . $$page{basename};
+		my $summary = $$page{summary};
+
+		# Clean up the title.
+		my $strip = $$yaml{strip};
+
+		if (defined $strip)
+		{
+			my $before = $title;
+			$title =~ s@$strip@@sg;
+
+			#print STDERR "  strip $strip ($before -> $title)\n";
+		}
+		
+		# Clean up the title and make it an attribute.
+		$summary = "" unless defined $summary;
+		$summary =~ s@\[([^\]]+)\]\([^\)]*\)@$1@sg;
+		die $summary if $summary =~ m@\[@;
+		$summary = " title='$summary'"
+			if length($summary) > 1;
+		
+		# Throw everything together.
+		$buffer .= "<div class='insert-category-col-link'>";
+		$buffer .= "<a href='$link'$summary>$title</a>\n";
+		$buffer .= "</div>";
+	}
+	
+	return $buffer;
+}
+
+sub bytitle
+{
+	return $$a{title} cmp $$b{title};
+}

@@ -1,0 +1,256 @@
+#!/usr/bin/perl
+
+# Converts a DocBook-based index file into an equivalent Markdown
+# version. This uses the convention of the '---' block for metadata at
+# the top of the file.
+
+# USAGE: index2markdown <directory|file>
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $delete = 0;
+my $verbose = 0;
+my $layout = "default";
+
+GetOptions(
+	"delete" => \$delete,
+	"verbose" => \$verbose,
+	"layout=s" => \$layout);
+
+# Go through the directories left on the argument list.
+finddepth(\&process, @ARGV);
+
+sub process
+{
+	# Pull out the elements we care about.
+	my $dir = $File::Find::dir;
+	my $filename = $_;
+	my $filepath = $File::Find::name;
+	$filepath = "./" . $filepath unless $filepath =~ /^\./;
+
+	# If it isn't a file, we don't do anything extra.
+	return unless (-f $_);
+	return unless ($_ eq "index.xml");
+
+	# Figure out the filename that we'll be writing out.
+	my $basename = $filename;
+	$basename =~ s/\.xml$/.markdown/;
+
+	# Report what we're processing.
+	print "$filepath -> $basename\n" if $verbose;
+
+	# We have two sections in the resulting Markdown file. The top is
+	# the metadata section, which is not rendered, and the bottom is
+	# the actual contents. In the original Creole, the metadata is a
+	# "#" for the title and a bullet list of metadata, separated by a
+	# newline.
+	my @metadata = ();
+	my @contents = ();
+	my $found_blank_line = 0;
+	my $last_was_blank = 0;
+
+	# Open up a file and slurp it into memory with a single call.
+	$/ = undef;
+	open INPUT, "<$filename" or die "Cannot open $filepath ($!)";
+	my $buffer = <INPUT>;
+	close INPUT;
+
+	# Normalize the author.
+	$buffer = normalize_author($buffer);
+	$buffer = normalize_copyright($buffer);
+	
+	# Pull out some of the fields.
+	push @metadata, "layout: $layout";
+	push @metadata, "Title: \"$1\"" if $buffer =~ s@<title>(.*?)</title>@@s;
+	push @metadata, "Author: \"$1\"" if $buffer =~ s@<author>(.*?)</author>@@s;
+	push @metadata, "Copyright: \"$1\"" if $buffer =~ s@<copyright>(.*?)</copyright>@@s;
+
+	# Convert the subject sets in tags.
+	while ($buffer =~ s@<subjectsets([^>]*)>(.*?)</subjectsets>@@s)
+	{
+		# Save the elements we use.
+		my $ss_attr = $1;
+		my $ss_body = $2;
+
+		# Pull out the schema from the element.
+		die "Cannot parse $buffer for subjectsets schema"
+			unless $ss_attr =~ m@schema=(["'])(.*?)\1@;
+		my $ss_schema = $2;
+
+		# Pull out the attributes.
+		my @ss_values = ();
+
+		while ($ss_body =~ s@<subjectterm>(.*?)</subjectterm>@@s)
+		{
+			my $ss_key = $1;
+			$ss_key =~ s@^\s*@@s;
+			$ss_key =~ s@\s*$@@s;
+			$ss_key =~ s@\s+@ @sg;
+			push @ss_values, $ss_key;
+		}
+
+		# Add the metadata to the list.
+		push @metadata, "$ss_schema: " . join(", ", @ss_values);
+	}
+
+	# Figure out if we are organizing based on chapters or stories.
+	my $organization = "Chapters";
+	$organization = "Stories" if $buffer =~ s@role=(.)magazine\1@@;
+	push @metadata, "Organization: $organization";
+
+	# Handle the subjecsets.
+	while ($buffer =~ s@<subjectsets schema=(.)(.*?)\1>(.*?)</subjectsets>@@s)
+	{
+		# Pull out the fields.
+		my $schema = $2;
+		my $contents = $3;
+
+		# Create a sequence of terms.
+		my @terms = ();
+		my $has_comma = 0;
+
+		while ($contents =~ s@<subjectterm>(.*?)</subjectterm>@@s)
+		{
+			my $term = $1;
+			push @terms, $term;
+			$has_comma = 1 if $term =~ /,/; 
+		}
+
+		# Figure out how to format it.
+		if ($has_comma)
+		{
+			push @metadata, "$schema:";
+			foreach my $term (@terms) { push @metadata, "  - $term"; }
+		}
+		else
+		{
+			push @metadata, "$schema: [" . join(", ", @terms) . "]";
+		}
+	}
+
+	# Process the paragraph elements.
+	while ($buffer =~ s@<para>(.*?)</para>@@)
+	{
+		push @contents, "";
+		push @contents, $1;
+	}
+
+	# Process the xincludes, which are the individual chapters.
+	if ($buffer =~ m@<xinclude:include@)
+	{
+		# Add in the beginning of the sequence.
+		push @metadata, "Includes:";
+
+		# Go through the include elements.
+		while ($buffer =~ s@<xinclude:include href=(.)(.*?).xml\1@@)
+		{
+			# Pull out the name of the include file and write it to YAML.
+			my $include = $2;
+			print STDERR "  include $include\n" if $verbose;
+			push @metadata, "  - filename: $include";
+			push @metadata, "    url: ./$include";
+
+			# Open up the file and pull out the contents.
+			my $include_filename = "$include.markdown";
+			open INCLUDE, "<$include_filename"
+				or die "Cannot open $include_filename ($!)";
+			my $include_buffer = <INCLUDE>;
+			$include_buffer =~ s/^---(.*?)---.*$/$1\n/s;
+			close INCLUDE;
+
+			# Grab the first part of the file which is a YAML structure.
+			my ($yaml, $ignore) = Load($include_buffer);
+
+			# Convert it into a nested structure.
+			$include_buffer = join("\n    ", split(/\n/, Dump($yaml)));
+			$include_buffer =~ s/---\n?//g;
+			push @metadata, $include_buffer;
+		}
+	}
+
+	# Open up the file handle.
+	open OUTPUT, ">$basename" or die "Cannot write to $basename ($!)";
+
+	print OUTPUT "---\n";
+	print OUTPUT join("\n", @metadata), "\n";
+	print OUTPUT "---\n";
+	print OUTPUT join("\n", @contents), "\n";
+
+	close OUTPUT;
+
+	# Remove the original file.
+	unlink($filename) if $delete;
+}
+
+sub normalize_author
+{
+	# Grab the buffer from the arguments.
+	my $buffer = shift @_;
+	
+	# Go through and replace the author tags.
+	while ($buffer =~ s@<author>(.*?<.*?)</author>@<aph/>@s)
+	{
+		# Pull out the fields.
+		my $match = $1;
+
+		# Pull out the components of the author.
+		my $surname = "";
+		my $firstname = "";
+
+		$surname = $1 if $match =~ s@<surname>(.*?)</surname>@@s;
+		$firstname = $1 if $match =~ s@<firstname>(.*?)</firstname>@@s;
+
+		# Put it back into the field.
+		my $author = $surname if $firstname =~ /^\s*$/;
+		$author = "$surname, $firstname" unless $firstname =~ /^\s*$/;
+		$buffer =~ s@<aph/>@<author>$author</author>@s;
+	}
+	
+    # Return the results.
+	return $buffer;
+}
+
+sub normalize_copyright
+{
+	# Grab the buffer from the arguments.
+	my $buffer = shift @_;
+	
+	# Go through and replace the author tags.
+	while ($buffer =~ s@<copyright>(.*?<.*?)</copyright>@<aph/>@s)
+	{
+		# Pull out the fields.
+		my $match = $1;
+
+		# Pull out the components of the author.
+		my $year = "";
+		my $holder = "";
+
+		$year = $1 if $match =~ s@<year>(.*?)</year>@@s;
+		$holder = $1 if $match =~ s@<holder>(.*?)</holder>@@s;
+
+		# Put it back into the field.
+		my $copyright = $year if $holder =~ /^\s*$/;
+		$copyright = "$year, $holder" unless $holder =~ /^\s*$/;
+		$buffer =~ s@<aph/>@<copyright>$copyright</copyright>@s;
+	}
+	
+    # Return the results.
+	return $buffer;
+}
