@@ -11,8 +11,10 @@ upload: generate
 
 local-copy-files:
 	#$(MAKE) -C $(JOURNALS_STORIES_PATH)
-	rm -rf build/jekyll/issue-*
-	rsync -avp $(JOURNALS_BUILD_PATH)/ build/jekyll/ --exclude=tmp
+	rsync -CLrpgo $(JOURNALS_BUILD_PATH)/ build/jekyll/ --exclude=tmp
+	rsync -CLrpgo $(JOURNALS_PATH) build/jekyll/ --filter=". rsync-text.txt"
+
+	find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=layout:page
 
 	for i in 00;do \
 		mv build/jekyll/issue-$$i.jpg build/jekyll/issue-$$i/index.jpg; \

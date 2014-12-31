@@ -1,0 +1,4 @@
+exclude notes.markdown
+include issue-*/
+include *.markdown
+exclude *
