@@ -2,11 +2,11 @@
 // Variables
 // --------------------------------------------------
 
-@import url(https://fonts.googleapis.com/css?family=Fanwood+Text|Ubuntu:400,400italic,700,700italic);
+@import url(fonts/source-sans-pro.css);
+@import url(fonts/source-serif-pro.css);
 
-@white-chocolate: rgb(245, 255, 192);
-@milk-chocolate: rgb(52, 42, 20);
-@dark-chocolate: rgb(26, 18, 2);
+@color-light: #fffde9;
+@color-dark: darken(@color-light, 89%);
 
 //== Colors
 //
@@ -44,12 +44,12 @@
 //
 //## Font, line-height, and color for body text, headings, and more.
 
-@font-family-sans-serif:  "Ubuntu", "Helvetica Neue", Helvetica, Arial, sans-serif;
-@font-family-serif:       "Fanwood Text", Georgia, "Times New Roman", Times, serif;
+@font-family-sans-serif:  "Source Sans Pro", sans-serif;
+@font-family-serif:       "Source Serif Pro", serif;
 
 //** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
 @font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace;
-@font-family-base:        @font-family-sans-serif;
+@font-family-base:        @font-family-serif;
 
 @font-size-base:          12pt;
 @font-size-large:         ceil((@font-size-base * 1.25)); // ~18px
