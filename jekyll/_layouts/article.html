@@ -14,7 +14,7 @@ layout: default
 </div>
 
 <article id="page" class="page">
-  <div class="dark-block short-block">
+  <div class="dark-block short-block ooc">
 	<div class="container">
 	  <div class="row">
 		<div class="col-md-12">
@@ -24,7 +24,7 @@ layout: default
 	</div>
   </div>
 
-  <div class="contents light-block" id="article">
+  <div class="contents light-block {% if page.outOfCharacter %} ooc{% endif %}" id="article">
 	<div class="container">
 	  <div class="row">
 		<div class="col-md-8">
