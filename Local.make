@@ -20,6 +20,12 @@ local-copy-files:
 		mv build/jekyll/issue-$$i.jpg build/jekyll/issue-$$i/index.jpg; \
 		convert build/jekyll/issue-$$i/index.jpg -scale x256 build/jekyll/issue-$$i/index-256.jpg; \
 		convert build/jekyll/issue-$$i/index.jpg -scale x512 build/jekyll/issue-$$i/index-512.jpg; \
+		if grep '<subject><subjectterm>Alpha</subjectterm></subject>' $(JOURNALS_PATH)/issue-$$i.xml > /dev/null; then \
+			find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=editingStatus:alpha; \
+		fi; \
+		if grep '<subject><subjectterm>Beta</subjectterm></subject>' $(JOURNALS_PATH)/issue-$$i.xml > /dev/null; then \
+			find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=editingStatus:beta; \
+		fi; \
 	done
 
 	# convert $(COVER_IMG) -scale 50% build/jekyll/img/cover.jpg
