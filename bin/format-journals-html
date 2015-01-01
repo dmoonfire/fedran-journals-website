@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+#
+# Loop through the file.
+#
+
+# Read in the file and process as we go.
+my @lines = ();
+my $in_content = 0;
+my $h2_count = 0;
+
+open INPUT, "<:encoding(UTF-8)", $ARGV[0]
+	or die "Cannot read $ARGV[0]";
+
+while (<INPUT>)
+{
+	# Clean up the line.
+	chomp;
+
+	# Finish up the line.
+	if (m@BEGIN CONTENT@)
+	{
+		$in_content = 1;
+	}
+	elsif (m@END CONTENT@)
+	{
+		push @lines, "</div>" if $h2_count > 0;
+	}
+	elsif ($in_content && m@<h2>(.*?)</h2>@)
+	{
+		my $title = lc($1);
+		my $class = "hidden-section";
+		my $add_hr = 1;
+
+		if ($title eq "about")
+		{
+			$class = "about-section";
+		}
+		elsif ($title eq "out of character")
+		{
+			$class = "ooc-section ooc";
+		}
+		else
+		{
+			$add_hr = 0;
+		}
+
+		if ($add_hr)
+		{
+			push @lines, "</div>" if $h2_count > 0;
+			push @lines, "<hr />" if $add_hr;
+			push @lines, "<div class='$class'>";
+			
+			$h2_count++;
+			next;
+		}
+	}
+
+	push @lines, $_;
+}
+
+close INPUT;
+
+# Write out the file.
+open OUTPUT, ">:encoding(UTF-8)", $ARGV[0]
+	or die "Cannot write $ARGV[0]";
+print OUTPUT join("\n", @lines), "\n";
+close OUTPUT;
+

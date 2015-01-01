@@ -1,0 +1,138 @@
+@import url(fonts/source-sans-pro.css);
+@import url(fonts/source-serif-pro.css);
+
+@color-base-cream: #fbfbe1;
+@color-base-green: #edfae1;
+@color-base-red: #faede1;
+@color-light-cream: lighten(@color-base-cream, 5%);
+@color-light-green: lighten(@color-base-green, 0%);
+@color-light-red: lighten(@color-base-red, 0%);
+@color-dark-cream: darken(@color-base-cream, 85%);
+@color-dark-green: darken(@color-base-green, 80%);
+@color-dark-red: darken(@color-base-red, 80%);
+
+@padding-block: 50px;
+
+/*
+ * General
+ */
+
+body
+{
+	background-color: @color-light-cream;
+	font-family: @font-family-serif;
+	font-size: @font-size-base;
+}
+
+hr
+{
+	width: 50%;
+	border: 1.5px solid @color-dark-green;
+}
+
+/*
+ * Links
+ */
+
+a
+{
+	text-decoration: none;
+	padding-right: 0.1em;
+	padding-left: 0.1em;
+	color: @color-dark-cream;
+	background-color: @color-light-green;
+	font-weight: bold;
+}
+
+a:hover
+{
+	text-decoration: none;
+}
+
+/*
+ * Breadcrumbs
+ */
+
+.breadcrumb li.active
+{
+	display: none;
+}
+
+/*
+ * Blocks
+ */
+
+.dark-block
+{
+	font-family: @font-family-serif;
+	font-size: @font-size-base;
+	background-color: @color-dark-cream;
+	color: @color-light-cream;
+	padding: @padding-block;
+
+	a
+	{
+		background-color: @color-dark-green;
+		color: @color-light-cream;
+	}
+
+	a:hover
+	{
+		background-color: @color-light-green;
+		color: @color-dark-cream;
+	}
+}
+
+.light-block
+{
+	font-family: @font-family-serif;
+	font-size: @font-size-base;
+	background-color: @color-light-cream;
+	color: @color-dark-cream;
+	padding: @padding-block;
+
+	a
+	{
+		background-color: @color-light-green;
+		color: @color-dark-cream;
+	}
+
+	a:hover
+	{
+		background-color: @color-dark-green;
+		color: @color-light-cream;
+	}
+}
+
+.short-block
+{
+	padding: 20px 0 0 0;
+}
+
+#footer, .breadcrumb
+{
+	a
+	{
+		padding: 0;
+		color: @color-light-red;
+		text-decoration: underline;
+		background: transparent;
+	}
+
+	a:hover
+	{
+		color: @color-light-red;
+		padding: 0;
+		text-decoration: none;
+		background: transparent;
+	}
+}
+
+/*
+ * Out of Character and Out of World
+ */
+
+.ooc, .oow
+{
+	font-family: @font-family-sans-serif;
+}

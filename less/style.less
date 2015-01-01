@@ -1,12 +1,5 @@
 @import "variables.less";
 
-body
-{
-	background-color: @color-light;
-	font-family: @font-family-serif;
-	font-size: 12pt;
-}
-
 h1, h2, h3
 {
 	text-align: center;
@@ -23,17 +16,6 @@ div#strip-title h3
 div#issues h2
 {
 	text-align: left;
-}
-
-a
-{
-	text-decoration: underline;
-
-}
-
-a:hover
-{
-	text-decoration: none;
 }
 
 i, em
@@ -60,19 +42,19 @@ div#cover h1
 
 div#strip
 {
-	background: url("/img/strip.jpg");
-	padding: 50px;
+	background: url("/img/strip.jpg") center;
+	padding: 50px 0px;
 
 	div#strip-border
 	{
-		background: @color-light;
+		background: @color-light-cream;
 		padding: 5px;
 
 		div#strip-title, div#issue-title
 		{
-			background: @color-light;
+			background: @color-light-cream;
 			padding: 30px 30px;
-			border: 4px solid @color-dark;
+			border: 4px solid @color-dark-cream;
 		}
 	}
 }
@@ -154,22 +136,9 @@ div.contents
  * Blocks
  */
 
-#footer, #introduction, .oow-block
+#breadcrumbs-block
 {
-	font-family: @font-family-serif;
-	font-size: 12pt;
-	background-color: @color-dark;
-	color: @color-light;
-	padding: 50px;
-}
-
-#issues, #articles
-{
-	font-family: @font-family-serif;
-	font-size: 12pt;
-	background-color: @color-light;
-	color: @color-dark;
-	padding: 50px;
+	padding: 20px 50px 0px 50px;
 }
 
 h2
@@ -181,6 +150,14 @@ h2
 /*
  * Articles
  */
+
+#article
+{
+	h2
+	{
+		padding-top: 30px;
+	}
+}
 
 div.article-page
 {
@@ -234,7 +211,7 @@ div.oow
 
 .footer-container a
 {
-	color: @color-light;
+	color: @color-light-cream;
 	font-weight: bold;
 
 	:hover
@@ -244,7 +221,7 @@ div.oow
 
 	:visited
 	{
-		color: @color-light;
+		color: @color-light-cream;
 	}
 }
 
@@ -253,11 +230,26 @@ div.oow
 	padding-top: 30px;
 	text-align: center;
 	font-size: small;
-	color: @color-dark;
+	color: @color-dark-cream;
 }
 
 #license a
 {
 	font-weight: normal;
-	color: @color-dark;
+	color: @color-dark-cream;
+}
+
+/*
+ * Sections
+ */
+
+.about-section
+{
+	font-weight: 200;
+}
+
+.ooc-section
+{
+	font-weight: 200;
+	font-family: @font-family-sans-serif;
 }

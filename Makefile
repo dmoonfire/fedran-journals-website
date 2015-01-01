@@ -6,6 +6,9 @@
 # give a default layout for those pages that don't explictly add it.
 DEFAULT_LAYOUT = page
 
+# Programs
+LESSC = lessc --no-color
+
 #
 # Local Additions
 #
@@ -44,8 +47,8 @@ bootstrap: prepare
 	if [ ! -d build/jekyll/css ];then mkdir -p build/jekyll/css;fi
 	rsync -a lib/bootstrap/less/ build/bootstrap/
 	rsync -a less/ build/bootstrap
-	lessc -x build/bootstrap/style.less > build/jekyll/css/style.css
-	lessc -x build/bootstrap/bootstrap.less > build/jekyll/css/bootstrap.css
+	$(LESSC) -x build/bootstrap/style.less > build/jekyll/css/style.css
+	$(LESSC) -x build/bootstrap/bootstrap.less > build/jekyll/css/bootstrap.css
 
 copy: bootstrap local-pre-copy
 # Copy in the base Jekyll installation. This will include the
@@ -144,12 +147,6 @@ local-post-generate:
 # The local-post-generate hook is useful for going through the full
 # generated file in the dist/ directory and performing additional
 # processing.
-	for i in $$(find dist/ -name "*.html");do \
-		cat $$i \
-			| perl -ne 's@<p>ATTR:@<p class="attribution">@sg;print;' \
-			> .tmp; \
-		mv .tmp $$i; \
-	done
 
 #
 # Install Requirements

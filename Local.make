@@ -14,7 +14,7 @@ local-copy-files:
 	rsync -CLrpgo $(JOURNALS_BUILD_PATH)/ build/jekyll/ --exclude=tmp
 	rsync -CLrpgo $(JOURNALS_PATH) build/jekyll/ --filter=". rsync-text.txt"
 
-	find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=layout:page
+	find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=layout:article
 
 	for i in 00;do \
 		mv build/jekyll/issue-$$i.jpg build/jekyll/issue-$$i/index.jpg; \
@@ -28,3 +28,20 @@ local-copy-files:
 	# convert $(COVER_IMG) -scale x512 build/jekyll/img/cover-512.jpg
 
 	# cp $(COVER_IMG) build/jekyll/img/cover-2554.jpg
+
+local-post-generate:
+	for i in $$(find dist/ -name "*.html");do \
+		cat $$i \
+			| perl -ne 's@<p>ATTR:@<p class="attribution">@sg;print;' \
+			> .tmp; \
+		mv .tmp $$i; \
+	done
+
+	# Change the H2's in the articles into formatted blocks. The
+	# in-world elements are converted into lighter text, the OOW is
+	# changed to serif.
+	for i in $$(find dist/ -name "*.html"); do \
+		if grep "BEGIN CONTENT" $$i > /dev/null; then \
+			bin/format-journals-html $$i; \
+		fi; \
+	done

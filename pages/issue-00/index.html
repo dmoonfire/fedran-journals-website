@@ -6,7 +6,7 @@ layout: default
 <div id="strip">
   <div class="container">
 	<div class="row">
-	  <div class="col-md-8 col-md-offset-2" id="strip-border">
+	  <div class="col-md-12" id="strip-border">
 		<div id="issue-title">
 		  <h1>Journals of Fedran #00</h1>
 		  <h3>Resonance</h3>
@@ -16,13 +16,18 @@ layout: default
   </div>
 </div>
 
-<div class="oow-block">
+<div class="dark-block oow">
   <div class="container">
+	<div class="row">
+	  <div class="col-md-12">
+		{% include breadcrumbs.html %}
+	  </div>
+	</div>
 	{% include articleref.html page="1" url="editor/" title="Notes from the Editor" class="oow" tags="OOW" %}
   </div>
 </div>
 
-<div id="articles">
+<div id="articles" class="light-block">
   <div class="container">
 	{% include articleref.html page="2" url="resonance/" title="Introduction to Resonance" tags="Essay" %}
 
@@ -74,7 +79,7 @@ layout: default
   </div>
 </div>
 
-<div class="oow-block">
+<div class="dark-block oow">
   <div class="container">
 	{% include articleref.html page="61" url="action/" title="Call to Action" class="oow" tags="OOW" %}
 

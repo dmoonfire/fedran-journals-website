@@ -1,24 +1,37 @@
 ---
 layout: default
 ---
-<article id="page" class="page">
-  <div id="chapter-title">
-	<div class="container">
-	  <div class="row">
-		<div class="col-md-8">
-		  {% include breadcrumbs.html %}
+<div id="strip">
+  <div class="container">
+	<div class="row">
+	  <div class="col-md-12" id="strip-border">
+		<div id="strip-title">
 		  <h1>{{ page.title }}</h1>
 		</div>
 	  </div>
 	</div>
   </div>
+</div>
 
-  <div class="contents">
+<article id="page" class="page">
+  <div class="dark-block short-block">
+	<div class="container">
+	  <div class="row">
+		<div class="col-md-12">
+		  {% include breadcrumbs.html %}
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <div class="contents light-block" id="article">
 	<div class="container">
 	  <div class="row">
 		<div class="col-md-8">
 		  {% include chapter-links.html %}
+		  <!-- BEGIN CONTENT -->
 		  {{content}}
+		  <!-- END CONTENT -->
 		  {% include chapter-links.html %}
 		</div>
 		<div class="col-md-4">
