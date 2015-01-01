@@ -1,0 +1,30 @@
+<div class="row">
+  <div class="col-md-1 col-md-offset-2 article-page">
+	{{ include.page }}
+  </div>
+  <div class="col-md-6 {{ include.class }}">
+	<div class="article-title">
+	  <a href="{{ include.url }}">{{ include.title }}</a>
+
+	  {% if include.part %}
+	  <span class="article-part">
+		Part {{ include.part }}
+	  </span>
+	  {% endif %}
+	</div>
+
+	{% if include.summary %}
+	{{ include.summary }}
+	{% endif %}
+  </div>
+  <div class="col-md-1">
+	{% if include.tags %}
+	{% assign tagss = include.tags | split: ', ' %}
+	<div class="article-tags">
+	  {% for tag in tagss %}
+	  <div class="article-tag">{{tag}}</div>
+	  {% endfor %}
+	</div>
+	{% endif %}
+  </div>
+</div>
