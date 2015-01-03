@@ -10,7 +10,7 @@ upload: generate
 	rsync htaccess-ssl fedran.com:~/sites/$(SITE_DOMAIN)/.htaccess
 
 local-copy-files:
-	#$(MAKE) -C $(JOURNALS_STORIES_PATH)
+	#$(MAKE) -C $(JOURNALS_PATH)
 	rsync -CLrpgo $(JOURNALS_BUILD_PATH)/ build/jekyll/ --exclude=tmp
 	rsync -CLrpgo $(JOURNALS_PATH) build/jekyll/ --filter=". rsync-text.txt"
 
@@ -27,6 +27,9 @@ local-copy-files:
 			find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=editingStatus:beta; \
 		fi; \
 	done
+
+	mkdir -p build/jekyll/img
+	convert $(JOURNALS_BUILD_PATH)/issue-00.jpg -geometry 1819x600+500 build/jekyll/img/strip.jpg
 
 	# convert $(COVER_IMG) -scale 50% build/jekyll/img/cover.jpg
 	# convert $(COVER_IMG) -scale x160 build/jekyll/img/cover-160.jpg
