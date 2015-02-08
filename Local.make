@@ -13,6 +13,7 @@ local-copy-files:
 	#$(MAKE) -C $(JOURNALS_PATH)
 	rsync -CLrpgo $(JOURNALS_BUILD_PATH)/ build/jekyll/ --exclude=tmp
 	rsync -CLrpgo $(JOURNALS_PATH) build/jekyll/ --filter=". rsync-text.txt"
+	rm -rf build/jekyll/issue-00/resonance*
 
 	find build/jekyll/issue-* -name "*.markdown" | xargs bin/insert-yaml --if-missing=layout:article
 
