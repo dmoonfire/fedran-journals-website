@@ -1,7 +1,5 @@
 name: "Journals of Fedran"
 baseUrl: http://journals.fedran.com
-markdown: redcarpet
-pygments: false
 
 # Look and feel of elements not controlled by CSS.
 windowsTile: "red"
