@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+
+#
+# Setup
+#
+
+# Directives
+use strict;
+use warnings;
+
+# Modules
+use File::Find;
+use File::Basename;
+use Getopt::Long;
+use YAML;
+
+use Data::Dumper;
+
+#
+# Command-Line Processing
+#
+
+# Grab the options from the command line.
+my $verbose = 0;
+
+GetOptions(
+	"verbose" => \$verbose);
+
+# Loop through all the files we'll be adding.
+while (@ARGV)
+{
+	# The first element is the file to load and manipulate.
+	my $filename = shift @ARGV;
+	print "Processing $filename" if $verbose;
+
+	# Open up the file so we can load it into memory.
+	open FILE, "<:encoding(UTF-8)", $filename
+		or die "Cannot open $filename ($!)";
+
+	# Loop through the lines and format them.
+	my @lines = ();
+	my $in_poetry = 0;
+
+	while (<FILE>)
+	{
+		# Look for the poetry blocks.
+		if ($in_poetry && m@```@)
+		{
+			$in_poetry = 0;
+			push @lines, "</div>\n";
+		}
+		elsif (m@```\s*poetry@)
+		{
+			$in_poetry = 1;
+			push @lines, "<div class='poetry'>\n";
+		}
+		elsif ($in_poetry)
+		{
+			chomp;
+			push @lines, "$_<br/>\n";
+		}
+		else
+		{
+			push @lines, $_;
+		}
+	}
+
+	# Finish up reading the file.
+	close FILE;
+
+	# Open the file and write it back out.
+	open FILE, ">:encoding(UTF-8)", $filename
+		or die "Cannot write $filename ($!)";
+	print FILE join("", @lines);
+	close FILE;
+}
