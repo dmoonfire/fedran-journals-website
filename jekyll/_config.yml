@@ -1,7 +1,5 @@
 name: "Site Name"
 baseUrl: http://url-of-site.com
-markdown: redcarpet
-pygments: false
 
 # Look and feel of elements not controlled by CSS.
 brand: "Fancy Title"
@@ -12,7 +10,7 @@ atomCopyright: "2013-2014, Bob; Some Rights Reserved."
 
 # Comments
 disqus:
-  enabled: true
+  enabled: false
   name: "short-name-of-discus-site"
   baseurl: "http://url-of-discus-site.com/"
 
@@ -25,4 +23,4 @@ piwik:
 author: "Bob"
 
 # Blog posts
-permalink: /blog/:year/:month/:day-:title
+permalink: /news/:year/:month/:day-:title

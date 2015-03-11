@@ -42,38 +42,47 @@
 	<link rel="alternate" type="application/atom+xml" title="News" href="/atom.xml">
   </head>
   <body>
-	<div id="wrapper">
-	  <div id="inner-wrapper">
-		{% include navigation.html %}
-
-        <!-- Contents -->
-        <div id="wrapped-container" class="container">
-  		  {{ content }}
-		
-		  <!-- The copyright goes at the bottom of the page -->
-		  <div class="row footer">
-			<div class="col-md-7">
-			  <div>
-				<a href="/atom.xml">Blog Atom/RSS</a>
-			  </div>
-			</div>
-			<div class="col-md-2">
-			</div>
-			<div class="col-md-3">
-			  <div id="copyright">
-				<div>Copyright &copy; 1991-2014, Bob</div>
-				<div>Some Rights Reserved</div>
-			  </div>
-
-			  <div id="license">
-<!-- NOTE: One should always have an explicit license on their pages. -->
-			  </div>
-			</div>
+	{% if page.editingStatus == "alpha" %}
+	<div class="alpha-editing-status ooc">
+	  <div class="container">
+		<div class="row">
+		  <div class="col-md-12">
+			The following has only been self-edited and is posted looking for high-level opinions from alpha readers. In specific, I'm looking for general flow, pacing, characterizations, things that work and don't work, or rough spots. There are plans for an editor before I'm completely done with this, it just hasn't happened yet. If you aren't interested in reading rough text, this probably isn't for you.
 		  </div>
-        </div>
+		</div>
 	  </div>
-    </div>
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script type="text/javascript" src="/js/bootstrap.min.js"></script>
-</body>
+	</div>
+	</div>
+	{% endif %}
+
+	{% if page.editingStatus == "beta" %}
+	<div class="beta-editing-status ooc">
+	  <div class="container">
+		<div class="row">
+		  <div class="col-md-12">
+			The following has been edited for line and development, but not copy editing. There may be some rough spots here and there, but otherwise this should just about final.
+		  </div>
+		</div>
+	  </div>
+	</div>
+	{% endif %}
+
+	{{ content }}
+
+	<div id="footer" class="dark-block oow">
+	  <div class="container">
+		<div class="row">
+		  <div class="col-md-12">
+			<div>Copyright &copy; 2015, D. Moonfire</div>
+			<div>Some rights reserved</div>
+			<div>This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.</div>
+		  </div>
+		</div>
+	  </div>
+	</div>
+	
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	{% include piwik.html %}
+  </body>
 </html>

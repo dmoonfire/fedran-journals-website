@@ -1,5 +1,7 @@
 *~
-
-build/
 dist/
+build/
 lib/bootstrap/
+lib/stories/
+lib/covers/
+tmp/

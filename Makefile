@@ -4,7 +4,10 @@
 
 # If a file doesn't have a layout, Jekyll chokes. This allows us to
 # give a default layout for those pages that don't explictly add it.
-DEFAULT_LAYOUT = default
+DEFAULT_LAYOUT = page
+
+# Programs
+LESSC = lessc --no-color
 
 #
 # Local Additions
@@ -44,8 +47,8 @@ bootstrap: prepare
 	if [ ! -d build/jekyll/css ];then mkdir -p build/jekyll/css;fi
 	rsync -a lib/bootstrap/less/ build/bootstrap/
 	rsync -a less/ build/bootstrap
-	lessc -x build/bootstrap/style.less > build/jekyll/css/style.css
-	lessc -x build/bootstrap/bootstrap.less > build/jekyll/css/bootstrap.css
+	$(LESSC) -x build/bootstrap/style.less > build/jekyll/css/style.css
+	$(LESSC) -x build/bootstrap/bootstrap.less > build/jekyll/css/bootstrap.css
 
 copy: bootstrap local-pre-copy
 # Copy in the base Jekyll installation. This will include the
@@ -111,7 +114,7 @@ copy: bootstrap local-pre-copy
 	$(MAKE) local-process-files
 
 generate: copy bootstrap
-	jekyll -s build/jekyll/ -d dist/
+	jekyll build -s build/jekyll/ -d dist/
 	$(MAKE) local-post-generate
 
 #

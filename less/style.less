@@ -1,2 +1,255 @@
 @import "variables.less";
 
+h1, h2, h3
+{
+	text-align: center;
+	padding-top: 0;
+	margin-top: 0;
+	font-family: @font-family-serif;
+}
+
+div#strip-title h3
+{
+	font-family: @font-family-sans-serif;
+}
+
+div#issues h2
+{
+	text-align: left;
+}
+
+i, em
+{
+	font-weight: 200;
+	font-style: normal;
+}
+
+b, strong
+{
+	font-weight: 400;
+	text-transform: uppercase;
+}
+
+.spacer
+{
+	padding-top: 50px;
+}
+
+div#cover h1
+{
+	font-size: 300%;
+}
+
+div#strip
+{
+	background: url("/img/strip.jpg") center;
+	padding: 50px 0px;
+
+	div#strip-border
+	{
+		background: @color-light-cream;
+		padding: 5px;
+
+		div#strip-title, div#issue-title
+		{
+			background: @color-light-cream;
+			padding: 30px 30px;
+			border: 4px solid @color-dark-cream;
+		}
+	}
+}
+
+/*
+ * Issues
+ */
+
+div.issue-cover
+{
+	float: right;
+	margin-left: 10px;
+}
+
+/*
+ * Chapters
+ */
+
+ul.breadcrumb
+{
+	background: transparent;
+	text-align: left;
+}
+
+div.contents
+{
+	p
+	{
+		text-indent: 2em;
+		margin: 0;
+		padding: 0;
+	}
+
+	blockquote
+	{
+		font-size: small;
+		border: none;
+		margin: 0 2em;
+		
+		p
+		{
+			text-indent: 0;
+			margin: 0.5em 0;
+		}
+
+		p.attribution
+		{
+			text-align: right;
+		}
+	}
+}
+
+.center
+{
+	text-align: center;
+}
+
+.right
+{
+	text-align: right;
+}
+
+/*
+ * Buttons
+ */
+
+.btn
+{
+	border-radius: 0;
+	margin-bottom: 1em;
+}
+
+.btn-success a, a.btn
+{
+	text-decoration: none;
+}
+
+/*
+ * Blocks
+ */
+
+#breadcrumbs-block
+{
+	padding: 20px 50px 0px 50px;
+}
+
+h2
+{
+	text-align: center;
+	
+}
+
+/*
+ * Articles
+ */
+
+#article
+{
+	h2
+	{
+		padding-top: 30px;
+	}
+}
+
+div.article-page
+{
+	font-weight: bold;
+	font-size: 24pt;
+	text-align: right;
+}
+
+div.article-title
+{
+	text-align: left;
+	font-size: 24pt;
+	margin-bottom: 5px;
+}
+
+span.article-part
+{
+	font-weight: 200;
+}
+
+div.article-tags
+{
+	margin-top: 6pt;
+	text-transform: uppercase;
+	font-family: @font-family-sans-serif;
+}
+
+div.article-tag
+{
+}
+
+div.oow
+{
+	font-family: @font-family-sans-serif;
+
+	h2
+	{
+		font-family: @font-family-sans-serif;
+	}
+}
+
+/*
+ * Footers
+ */
+
+#footer
+{
+	min-height: 300px;
+	font-family: @font-family-sans-serif;
+}
+
+.footer-container a
+{
+	color: @color-light-cream;
+	font-weight: bold;
+
+	:hover
+	{
+		color: white;
+	}
+
+	:visited
+	{
+		color: @color-light-cream;
+	}
+}
+
+#copyright, #license
+{
+	padding-top: 30px;
+	text-align: center;
+	font-size: small;
+	color: @color-dark-cream;
+}
+
+#license a
+{
+	font-weight: normal;
+	color: @color-dark-cream;
+}
+
+/*
+ * Sections
+ */
+
+.about-section
+{
+	font-weight: 200;
+}
+
+.ooc-section
+{
+	font-weight: 200;
+	font-family: @font-family-sans-serif;
+}
