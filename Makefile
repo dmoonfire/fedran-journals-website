@@ -129,6 +129,10 @@ local-pre-copy:
 # "copy" target is called.
 
 local-copy-files:
+# This hook is used to copy files from the setup into the proper
+# place. It can be used to pull files from other locations. For
+# example, pull in the site icons or additional pages from a Git
+# repository.
 
 local-process-files:
 # The local-process-files hook is useful for going through and adding
