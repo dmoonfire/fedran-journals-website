@@ -2,13 +2,13 @@
 @import url(fonts/source-serif-pro.css);
 
 @color-base-cream: #fbfbe1;
-@color-base-green: #edfae1;
+@color-base-green: darken(@color-light-green, 10%);
 @color-base-red: #faede1;
 @color-light-cream: lighten(@color-base-cream, 5%);
-@color-light-green: lighten(@color-base-green, 0%);
+@color-light-green: #edfae1;
 @color-light-red: lighten(@color-base-red, 0%);
 @color-dark-cream: darken(@color-base-cream, 85%);
-@color-dark-green: darken(@color-base-green, 80%);
+@color-dark-green: darken(@color-light-green, 82%);
 @color-dark-red: darken(@color-base-red, 80%);
 
 @padding-block: 50px;
@@ -82,11 +82,24 @@ a:hover
 		color: @color-dark-cream;
 	}
 
-	.btn-success
+	a:visited
+	{
+		background-color: @color-light-red;
+		color: @color-dark-cream;
+	}
+
+	.btn-success, a.btn-success:visited
 	{
 		background-color: @color-dark-green;
 		border-color: black;
 		color: @color-light-cream;
+	}
+
+	a.btn-success:hover
+	{
+		background-color: @color-light-green;
+		border-color: @color-base-cream;
+		color: @color-dark-cream;
 	}
 }
 
@@ -100,7 +113,7 @@ a:hover
 
 	a
 	{
-		background-color: @color-light-green;
+		background-color: @color-base-green;
 		color: @color-dark-cream;
 	}
 
