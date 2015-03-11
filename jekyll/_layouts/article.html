@@ -4,7 +4,7 @@ layout: default
 <div id="strip">
   <div class="container">
 	<div class="row">
-	  <div class="col-md-8 col-md-offset-2" id="strip-border">
+	  <div class="col-xs-10 col-xs-offset-1 col-md-8 col-md-offset-2" id="strip-border">
 		<div id="strip-title">
 		  <h1>{{ page.title }}</h1>
 		</div>
@@ -17,7 +17,7 @@ layout: default
   <div class="dark-block short-block ooc">
 	<div class="container">
 	  <div class="row">
-		<div class="col-md-8 col-md-offset-2">
+		<div class="col-xs-10 col-xs-offset-1 col-md-8 col-md-offset-2">
 		  {% include breadcrumbs.html %}
 		</div>
 	  </div>
@@ -27,7 +27,7 @@ layout: default
   <div class="contents light-block {% if page.outOfCharacter %} ooc{% endif %}" id="article">
 	<div class="container">
 	  <div class="row">
-		<div class="col-md-8 col-md-offset-2">
+		<div class="col-xs-10 col-xs-offset-1 col-md-8 col-md-offset-2">
 		  {% include chapter-links.html %}
 		  <!-- BEGIN CONTENT -->
 		  {{content}}
