@@ -26,10 +26,10 @@ LESSC = lessc --no-color
 all: generate
 
 clean:
-	rm -rf build dist/*
+	rm -rf build/collect build/jekyll build/bootstrap dist/*
 
 reallyclean: clean
-	rm -rf dist
+	rm -rf dist build
 
 prepare:
 	if [ ! -d build/jekyll ];then mkdir -p build/jekyll;fi

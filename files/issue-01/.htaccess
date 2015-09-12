@@ -1,0 +1,8 @@
+AuthUserFile /home/dmoonfire/lib/patreon.passwd
+AuthName "Sand and Ash Patron"
+AuthType Basic
+
+<FilesMatch "\.html$">
+  require valid-user
+</FilesMatch>
+

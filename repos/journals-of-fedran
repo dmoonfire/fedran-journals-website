@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Variables
+script_dir=$(dirname $0)
+build_dir=$script_dir/../build
+repo_dir=$build_dir/repos/journals-of-fedran
+dest_dir=$build_dir/jekyll
+
+# Covers
+make -C $repo_dir make-covers
+
+# Issues
+issues=$(grep -l "availability: Public" $repo_dir/issue-??/*.markdown | perl -ne 's@.*/(issue-\d+)/.*?$@$1@;print;' | sort | uniq)
+
+for issue in $issues
+do
+	# Make sure the issue directory exists.
+	echo $issue
+	if [ ! -d $dest_dir/$issue ];then mkdir -p $dest_dir/$issue; fi
+
+	# Copy all the files into it.
+	cp $(grep -l "availability: Public" $repo_dir/issue-??/*.markdown) $dest_dir/$issue
+	convert $repo_dir/build/$issue.jpg -geometry x256 $dest_dir/$issue/index-256.jpg
+done
+
+#ls $repo_dir

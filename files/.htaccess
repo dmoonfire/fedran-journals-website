@@ -1,3 +1,7 @@
 Options -Indexes
 ErrorDocument 404 /index.html
 ErrorDocument 403 /index.html
+
+RewriteEngine On 
+RewriteCond %{SERVER_PORT} 80 
+RewriteRule ^(.*)$ https://journals.fedran.com/$1 [R,L]

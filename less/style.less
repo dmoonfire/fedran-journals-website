@@ -44,6 +44,26 @@ b, strong
 	text-transform: uppercase;
 }
 
+p.patreon
+{
+	background-color: @brand-warning;
+	color: black;
+	padding: 5px 10px;
+	width: 100%;
+
+	a
+	{
+		background-color: @color-light-cream;
+		font-weight: bold;
+	}
+
+	a:hover
+	{
+		background-color: @brand-warning;
+		color: @color-light-cream;
+	}
+}
+
 .spacer
 {
 	padding-top: 50px;
@@ -79,8 +99,25 @@ div#strip
 
 div.issue-cover
 {
-	float: right;
-	margin-left: 10px;
+	a:hover
+	{
+		text-decoration: none;
+		border: 0;
+	}
+
+	img
+	{
+		box-shadow: 0px 0px 10px @color-base-green;
+		text-decoration: none;
+		border: 1px solid @color-dark-green;
+	}
+
+	img:hover
+	{
+		box-shadow: 0px 0px 10px @color-dark-cream;
+		text-decoration: none;
+		border: 1px solid @color-light-cream;
+	}
 }
 
 /*
